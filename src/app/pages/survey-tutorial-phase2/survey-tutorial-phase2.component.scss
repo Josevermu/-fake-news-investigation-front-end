@@ -1,0 +1,328 @@
+@import "colors";
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  width: 100%;
+}
+
+.tutorial-content {
+  text-align: center;
+}
+
+.step-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+
+  &.active {
+    background: $accent-gold;
+    width: 12px;
+    height: 12px;
+  }
+
+  &.done {
+    background: $success-color;
+  }
+}
+
+.tutorial-icon {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.tutorial-title {
+  color: $accent-gold;
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+}
+
+.tutorial-description {
+  font-size: 24px;
+  color: $text-tertiary;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.tutorial-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.btn-back {
+  background: transparent;
+  border: 1px solid $accent-gold;
+  color: $accent-gold;
+  font-weight: 700;
+  padding: 8px 24px;
+  border-radius: $border-radius-button;
+  cursor: pointer;
+  font-size: 24px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba($accent-gold, 0.1);
+    transform: translateY(-1px);
+  }
+}
+
+.btn-next {
+  background: linear-gradient(135deg, $accent-orange, $accent-gold);
+  color: $dark-surface;
+  font-weight: 700;
+  border: none;
+  padding: 10px 28px;
+  border-radius: $border-radius-button;
+  cursor: pointer;
+  font-size: 24px;
+  transition: all 0.3s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+// === Example question box ===
+.example-question-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.example-question-text {
+  font-size: 24px;
+  font-weight: 600;
+  color: $text-primary;
+  margin-bottom: 1.25rem;
+  line-height: 1.5;
+}
+
+// === Scale (matching survey component) ===
+.scale-container {
+  position: relative;
+  width: 100%;
+  margin: 20px 0 10px;
+}
+
+.scale-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 24px;
+  color: $text-tertiary;
+  margin-bottom: 16px;
+  text-align: center;
+
+  span {
+    flex: 1;
+    padding: 0 2px;
+  }
+}
+
+.scale-labels-top {
+  display: grid;
+  grid-template-columns: repeat(21, 1fr);
+  font-size: 18px;
+  color: $text-tertiary;
+  margin-bottom: 8px;
+  text-align: center;
+  gap: 2px;
+
+  .label-totalmente {
+    grid-column: span 1;
+    &:first-child {
+      grid-column: 1 / 2;
+    }
+    &:last-child {
+      grid-column: 21 / 22;
+    }
+  }
+  .label-bastante {
+    grid-column: span 4;
+    &:nth-child(2) {
+      grid-column: 2 / 6;
+    }
+    &:nth-child(5) {
+      grid-column: 17 / 21;
+    }
+  }
+  .label-poco {
+    grid-column: span 5;
+    &:nth-child(3) {
+      grid-column: 6 / 11;
+    }
+    &:nth-child(4) {
+      grid-column: 12 / 17;
+    }
+  }
+}
+
+.scale-row {
+  display: grid;
+  grid-template-columns: repeat(21, 1fr);
+  gap: 2px;
+  width: 100%;
+}
+
+.scale-btn {
+  background: rgba(46, 204, 113, 0.15);
+  color: $success-color;
+  border: 1px solid $success-color;
+  border-radius: 6px;
+  padding: 8px 2px;
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  min-width: 0;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: rgba(46, 204, 113, 0.3);
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+  }
+
+  &.selected {
+    background: rgba(46, 204, 113, 0.45);
+    transform: scale(1.15);
+    box-shadow: 0 0 16px rgba(46, 204, 113, 0.5);
+    border: 2px solid $success-color;
+    color: $white-color;
+  }
+
+  &.locked {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+// === Feedback panel ===
+.feedback-panel {
+  background: rgba(46, 204, 113, 0.15);
+  border: 1px solid $success-color;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.feedback-label {
+  font-size: 24px;
+  font-weight: 700;
+  color: $success-color;
+  margin: 0;
+}
+
+// === Scale guide text ===
+.scale-guide-text {
+  background: rgba(255, 170, 80, 0.08);
+  border: 1px solid rgba(255, 170, 80, 0.3);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-top: 1.25rem;
+  text-align: left;
+}
+
+.guide-instruction {
+  font-size: 18px;
+  color: $accent-gold;
+  margin: 0 0 0.75rem 0;
+  text-align: center;
+}
+
+.guide-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 15px;
+  line-height: 1.5;
+  color: $text-primary;
+}
+
+.guide-left,
+.guide-center,
+.guide-right {
+  display: block;
+}
+
+.guide-center {
+  text-align: center;
+  color: $text-secondary;
+}
+
+// Mobile optimizations
+@media (max-width: 768px) {
+  .screen {
+    padding: 16px;
+  }
+
+  .tutorial-title {
+    font-size: 22px;
+  }
+
+  .tutorial-description {
+    font-size: 16px;
+  }
+
+  .example-question-text {
+    font-size: 16px;
+  }
+
+  .scale-labels-top {
+    font-size: 12px;
+  }
+
+  .scale-labels {
+    font-size: 14px;
+  }
+
+  .scale-btn {
+    font-size: 14px;
+    padding: 4px 1px;
+  }
+
+  .feedback-label {
+    font-size: 16px;
+  }
+
+  .btn-next,
+  .btn-back {
+    font-size: 14px;
+    padding: 8px 20px;
+  }
+
+  .guide-instruction {
+    font-size: 14px;
+  }
+
+  .guide-row {
+    font-size: 12px;
+  }
+}

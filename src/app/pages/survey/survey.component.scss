@@ -1,0 +1,332 @@
+@import "colors";
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  width: 100%;
+}
+
+.survey-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.counter {
+  font-size: 24px;
+  color: $text-tertiary;
+}
+
+.percent {
+  font-size: 24px;
+  font-weight: 700;
+  color: $accent-gold;
+}
+
+.mb-5 {
+  margin-bottom: 1.25rem;
+}
+
+.question-text {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: $text-primary;
+  margin-bottom: 1.5rem;
+}
+
+// === Question image (Instagram / WhatsApp) ===
+.question-image-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.format-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  color: $white-color;
+  font-size: 24px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 2;
+}
+
+.question-image {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  object-fit: contain;
+}
+
+// === Scale buttons section ===
+.scale-container {
+  position: relative;
+  width: 100%;
+  margin: 20px 0 10px;
+}
+
+.scale-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 24px;
+  color: $text-tertiary;
+  margin-bottom: 16px;
+  text-align: center;
+
+  span {
+    flex: 1;
+    padding: 0 2px;
+  }
+}
+
+.scale-labels-top {
+  display: grid;
+  grid-template-columns: repeat(21, 1fr);
+  font-size: 18px;
+  color: $text-tertiary;
+  margin-bottom: 8px;
+  text-align: center;
+  gap: 2px;
+
+  .label-totalmente {
+    grid-column: span 1;
+    &:first-child {
+      grid-column: 1 / 2;
+    }
+    &:last-child {
+      grid-column: 21 / 22;
+    }
+  }
+  .label-bastante {
+    grid-column: span 4;
+    &:nth-child(2) {
+      grid-column: 2 / 6;
+    }
+    &:nth-child(5) {
+      grid-column: 17 / 21;
+    }
+  }
+  .label-poco {
+    grid-column: span 5;
+    &:nth-child(3) {
+      grid-column: 6 / 11;
+    }
+    &:nth-child(4) {
+      grid-column: 12 / 17;
+    }
+  }
+}
+
+.scale-row {
+  display: grid;
+  grid-template-columns: repeat(21, 1fr);
+  gap: 2px;
+  width: 100%;
+}
+
+.scale-btn {
+  background: rgba(46, 204, 113, 0.15);
+  color: $success-color;
+  border: 1px solid $success-color;
+  border-radius: 6px;
+  padding: 8px 2px;
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  min-width: 0;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: rgba(46, 204, 113, 0.3);
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+  }
+
+  &.selected {
+    background: rgba(46, 204, 113, 0.45);
+    transform: scale(1.15);
+    box-shadow: 0 0 16px rgba(46, 204, 113, 0.5);
+    border: 2px solid $success-color;
+    color: $white-color;
+  }
+
+  &.locked {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+// === Primary action button ===
+.btn-primary {
+  background: linear-gradient(135deg, $accent-orange, $accent-gold);
+  color: $dark-surface;
+  font-weight: 700;
+  border: none;
+  padding: 10px 24px;
+  border-radius: $border-radius-button;
+  cursor: pointer;
+  font-size: 24px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  width: auto;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+.w-full {
+  width: 100%;
+}
+
+.btn-center {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+// === Mobile landscape optimizations ===
+@media (max-width: 768px) and (orientation: landscape) {
+  .screen {
+    padding: 12px;
+  }
+
+  .survey-header {
+    margin-bottom: 0.5rem;
+  }
+
+  .counter, .percent {
+    font-size: 18px;
+  }
+
+  .question-text {
+    font-size: 18px;
+    margin-bottom: 0.75rem;
+  }
+
+  .question-image {
+    max-width: 300px;
+  }
+
+  .scale-labels-top {
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  .scale-labels {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  .scale-btn {
+    font-size: 16px;
+    padding: 6px 1px;
+  }
+
+  .mb-5 {
+    margin-bottom: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .scale-labels-top {
+    font-size: 12px;
+  }
+
+  .scale-labels {
+    font-size: 14px;
+  }
+
+  .scale-btn {
+    font-size: 14px;
+    padding: 4px 1px;
+  }
+}
+
+// Glass card size is set globally in the glass-card component
+
+// Responsive: on very small screens reduce button font
+@media (max-width: 600px) {
+  .scale-btn {
+    font-size: 24px;
+    padding: 6px 1px;
+  }
+}
+
+// === Feedback panel (GROUP_A) ===
+.feedback-panel {
+  text-align: center;
+  padding: 24px 16px;
+  margin: 16px 0;
+  border-radius: 12px;
+  background: rgba(30, 20, 60, 0.5);
+  border: 1px solid rgba(255, 170, 80, 0.2);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.feedback-label {
+  font-size: 24px;
+  font-weight: 700;
+  color: $text-primary;
+  margin-bottom: 10px;
+}
+
+.feedback-ref {
+  font-size: 24px;
+  color: $text-tertiary;
+  margin-bottom: 16px;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid $accent-gold;
+  color: $accent-gold;
+  font-weight: 700;
+  padding: 10px 24px;
+  border-radius: $border-radius-button;
+  cursor: pointer;
+  font-size: 24px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 179, 71, 0.1);
+    transform: translateY(-1px);
+  }
+}

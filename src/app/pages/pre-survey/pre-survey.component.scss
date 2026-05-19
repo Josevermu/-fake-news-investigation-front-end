@@ -1,0 +1,247 @@
+@import "colors";
+
+.scale-row--labeled {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.scale-btn--labeled {
+  padding: 12px 8px;
+  font-size: 22px;
+  font-weight: 700;
+  // same color styles as .scale-btn
+}
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  padding: 24px;
+  width: 100%;
+}
+
+// ---- Header ----
+
+.pre-survey-header {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.pre-survey-title {
+  color: $accent-gold;
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 0.4rem;
+}
+
+.pre-survey-subtitle {
+  font-size: 24px;
+  color: $text-secondary;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.progress-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 0.4rem;
+
+  .progress-fill {
+    height: 100%;
+    background: $accent-gold;
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+}
+
+.progress-label {
+  font-size: 24px;
+  color: $text-tertiary;
+}
+
+// ---- Question cards ----
+
+.questions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.question-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  transition: border-color 0.3s;
+
+  &.answered {
+    border-color: rgba($accent-gold, 0.45);
+  }
+}
+
+.question-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: $accent-gold;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+.question-text {
+  font-size: 24px;
+  color: $text-primary;
+  line-height: 1.55;
+  margin-bottom: 0.8rem;
+}
+
+// ---- Scale ----
+
+.scale-anchors {
+  display: flex;
+  justify-content: space-between;
+  font-size: 24px;
+  color: $text-tertiary;
+  margin-bottom: 0.4rem;
+  padding: 0 2px;
+}
+
+.scale-row {
+  display: grid;
+  grid-template-columns: repeat(21, 1fr);
+  gap: 2px;
+  width: 100%;
+}
+
+.scale-btn {
+  padding: 8px 2px;
+  border-radius: 6px;
+  border: 1px solid $success-color;
+  background: rgba(46, 204, 113, 0.15);
+  color: $success-color;
+  font-size: 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: rgba(46, 204, 113, 0.3);
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+  }
+
+  &.selected {
+    background: rgba(46, 204, 113, 0.45);
+    transform: scale(1.15);
+    box-shadow: 0 0 16px rgba(46, 204, 113, 0.5);
+    border: 2px solid $success-color;
+    color: $white-color;
+  }
+
+  &.locked {
+    cursor: default;
+    opacity: 0.75;
+
+    &.selected {
+      opacity: 1;
+    }
+  }
+
+  &:disabled:not(.selected) {
+    opacity: 0.3;
+  }
+}
+
+.answer-display {
+  margin-top: 0.6rem;
+  font-size: 24px;
+  color: $accent-gold;
+}
+
+// ---- Navigation ----
+
+.btn-center {
+  display: flex;
+  justify-content: center;
+}
+
+.mt-2 {
+  margin-top: 1.5rem;
+}
+
+.btn-primary {
+  padding: 0.6rem 2rem;
+  border-radius: 8px;
+  border: none;
+  background: $accent-gold;
+  color: #000;
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+// === Mobile optimizations ===
+@media (max-width: 768px) {
+  .screen {
+    padding: 16px;
+  }
+
+  .pre-survey-title {
+    font-size: 22px;
+  }
+
+  .pre-survey-subtitle {
+    font-size: 16px;
+  }
+
+  .progress-label {
+    font-size: 14px;
+  }
+
+  .question-number {
+    font-size: 16px;
+  }
+
+  .question-text {
+    font-size: 16px;
+  }
+
+  .scale-anchors {
+    font-size: 14px;
+  }
+
+  .scale-btn {
+    font-size: 16px;
+    padding: 6px 1px;
+  }
+
+  .scale-btn--labeled {
+    font-size: 18px;
+    padding: 10px 6px;
+  }
+
+  .answer-display {
+    font-size: 16px;
+  }
+
+  .btn-primary {
+    font-size: 18px;
+    padding: 0.5rem 1.5rem;
+  }
+
+  .btn-back {
+    font-size: 14px;
+    padding: 6px 18px;
+  }
+}

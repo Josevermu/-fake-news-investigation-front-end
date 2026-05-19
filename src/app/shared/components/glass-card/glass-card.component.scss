@@ -1,0 +1,18 @@
+@import "colors";
+
+.glass-card {
+  background: $glass-bg;
+  backdrop-filter: blur($glass-blur);
+  -webkit-backdrop-filter: blur($glass-blur);
+  border: 1px solid $glass-border;
+  border-radius: $border-radius-card;
+  padding: 44px 56px;
+  width: 1100px;
+  min-height: 680px;
+  max-width: 95vw;
+  color: $text-primary;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+}

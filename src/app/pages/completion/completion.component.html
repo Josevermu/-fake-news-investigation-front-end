@@ -1,0 +1,75 @@
+<section class="screen anim">
+  <app-glass-card>
+    <ng-container *ngIf="isGroupB; else groupACompletion">
+      <div class="completion-content">
+        <div class="completion-icon">📋</div>
+        <h2 class="completion-title">Resultados</h2>
+        <p class="completion-text">
+          Aquí puedes ver cuáles eran las respuestas correctas y cómo te fue.
+        </p>
+
+        <div class="step-indicator">
+          <span>Paso {{ currentStep() + 1 }} de {{ totalSteps }}</span>
+        </div>
+
+        <div class="results-section">
+          <div class="result-row" *ngFor="let r of currentStepResults">
+            <span class="result-icon">{{ r.icon }}</span>
+            <div class="result-content">
+              <div class="result-text-section">
+                <span class="result-label">{{ r.phase }} · Noticia {{ r.index }}</span>
+                <span class="result-text-inline">
+                  Correcta: <strong>{{ r.correct }}</strong> · Tu respuesta: <strong>{{ r.yours }}</strong>
+                </span>
+              </div>
+              <img 
+                *ngIf="r.imagePath" 
+                [src]="r.imagePath" 
+                [alt]="'Noticia ' + r.index"
+                class="result-image"
+                (error)="$any($event.target).style.display='none'"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="navigation-buttons">
+          <button 
+            class="btn-back" 
+            *ngIf="currentStep() > 0" 
+            (click)="backStep()">
+            ← Anterior
+          </button>
+          <button 
+            class="btn-next" 
+            (click)="nextStep()"
+            *ngIf="!isLastStep">
+            Siguiente →
+          </button>
+          <button 
+            class="btn-next" 
+            (click)="goToReward()"
+            *ngIf="isLastStep">
+            Continuar a incentivos →
+          </button>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-template #groupACompletion>
+      <div class="completion-content">
+        <div class="completion-icon">✅</div>
+        <h2 class="completion-title">¡Encuesta Completada!</h2>
+        <p class="completion-text">
+          Tus respuestas han sido registradas. Gracias por tu tiempo.
+        </p>
+        
+        <div class="btn-center mt-2">
+          <button class="btn-next" (click)="goToReward()">
+            Continuar →
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </app-glass-card>
+</section>

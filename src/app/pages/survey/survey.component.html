@@ -1,0 +1,75 @@
+<section class="screen">
+  <app-glass-card>
+    <!-- Header: question counter + percentage -->
+    <div class="survey-header">
+      <span class="counter">{{ questionCounter }}</span>
+      <span class="percent">{{ progressPercent }}%</span>
+    </div>
+
+    <!-- Progress bar -->
+    <app-progress-bar [value]="progressPercent" class="mb-5"></app-progress-bar>
+
+    <!-- Question image (all formats: INSTAGRAM, WHATSAPP, TEXT) -->
+    <div class="question-image-container" *ngIf="questionImagePath">
+      <img
+        [src]="questionImagePath"
+        [alt]="currentQuestion?.itemText"
+        class="question-image"
+        (error)="$any($event.target).style.display='none'"
+      />
+    </div>
+
+    <!-- Question text (fallback when image is not available) -->
+    <p class="question-text" *ngIf="currentQuestion && !questionImagePath">
+      {{ currentQuestion.itemText }}
+    </p>
+
+    <!-- Scale: 21 buttons in a single row (-10 to +10) -->
+    <div class="scale-container" *ngIf="!showingFeedback()">
+      <div class="scale-labels-top">
+        <span class="label-totalmente">totalmente</span>
+        <span class="label-bastante">bastante</span>
+        <span class="label-poco">poco</span>
+        <span class="label-poco">poco</span>
+        <span class="label-bastante">bastante</span>
+        <span class="label-totalmente">totalmente</span>
+      </div>
+      <div class="scale-row">
+        <button
+          *ngFor="let val of scaleValues"
+          class="scale-btn"
+          [class.selected]="selectedValue() === val"
+          [class.locked]="selectionLocked()"
+          [disabled]="selectionLocked()"
+          (click)="selectScale(val)"
+        >
+          {{ val }}
+        </button>
+      </div>
+      <div class="scale-labels">
+        <span *ngIf="!isMemoryTest">Falsa</span>
+        <span *ngIf="isMemoryTest">Vieja</span>
+        <span>No estoy seguro</span>
+        <span *ngIf="!isMemoryTest">Verdadera</span>
+        <span *ngIf="isMemoryTest">Nueva</span>
+      </div>
+    </div>
+
+    <!-- Feedback panel (GROUP_A only, shown inline for 1 second) -->
+    <div class="feedback-panel anim" *ngIf="showingFeedback()">
+      <p class="feedback-label">{{ feedbackLabel }}</p>
+      <p class="feedback-ref" *ngIf="feedbackReference">
+        📖 {{ feedbackReference }}
+      </p>
+    </div>
+  </app-glass-card>
+
+  <!-- Toast notification -->
+  <app-toast />
+
+  <!-- Loading overlay when saving -->
+  <app-loading *ngIf="isSaving()" />
+
+  <!-- Orientation alert for mobile devices -->
+  <app-orientation-alert />
+</section>

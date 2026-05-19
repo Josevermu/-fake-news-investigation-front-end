@@ -1,0 +1,35 @@
+<section class="screen">
+  <app-glass-card>
+    <div class="reward-content">
+      <div class="reward-icon">🎁</div>
+      <h2 class="reward-title">¡Gracias por participar!</h2>
+      <p class="reward-subtitle">
+        Como agradecimiento por tu participación, escoge la opción que más te interese:
+      </p>
+
+      <div class="reward-grid">
+        <div
+          *ngFor="let reward of rewards; let i = index"
+          class="reward-card anim"
+          [class.selected]="selectedRewardId === reward.id"
+          [class.color-orange]="reward.id === 1"
+          [class.color-green]="reward.id === 2"
+          [class.color-gold]="reward.id === 3"
+          [style.animation-delay]="(i * 0.12) + 's'"
+          (click)="selectReward(reward)"
+        >
+          <div class="r-badge"
+            [class.badge-orange]="reward.id === 1"
+            [class.badge-green]="reward.id === 2"
+            [class.badge-gold]="reward.id === 3"
+          >{{ reward.title }}</div>
+          <div class="r-desc">{{ reward.description }}</div>
+        </div>
+      </div>
+
+      <p *ngIf="selectedRewardId !== null" class="confirmation-message">
+        ✓ Tu selección ha sido registrada exitosamente
+      </p>
+    </div>
+  </app-glass-card>
+</section>
