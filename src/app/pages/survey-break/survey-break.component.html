@@ -1,0 +1,40 @@
+<section class="screen anim">
+  <app-glass-card>
+    <div class="break-content">
+      <div class="break-icon">☕</div>
+      <h2 class="break-title">¡Momento de descanso!</h2>
+      <p class="break-description">
+        Has completado la primera fase del experimento. Tómate un momento
+        para descansar antes de continuar con la segunda fase.
+      </p>
+
+      <!-- Video player -->
+      <div class="video-container">
+        <ng-container *ngIf="breakVideoEmbedUrl; else videoPlaceholder">
+          <iframe
+            class="video-frame"
+            [src]="breakVideoEmbedUrl"
+            title="Video de descanso"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allowfullscreen
+          ></iframe>
+        </ng-container>
+
+        <ng-template #videoPlaceholder>
+          <div class="video-placeholder">
+            <span class="video-icon">🎬</span>
+            <p class="video-text">Video de descanso</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="btn-center">
+        <button class="btn-continue" (click)="continue()">
+          Continuar experimento →
+        </button>
+      </div>
+    </div>
+  </app-glass-card>
+</section>

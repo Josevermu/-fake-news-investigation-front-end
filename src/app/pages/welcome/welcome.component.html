@@ -1,0 +1,289 @@
+<section class="screen anim">
+  <app-glass-card>
+    <!-- ========== STEP 0: Welcome ========== -->
+    <div class="welcome-content" *ngIf="currentStep() === 0">
+      <div class="welcome-icon">🔬</div>
+      <h1 class="welcome-title">¡Te damos la bienvenida!</h1>
+      <p class="welcome-subtitle">Investigación Académica</p>
+      <p class="welcome-description">
+        Te hemos contactado como experto en investigación consumo de
+        información, debido a que en los últimos años han proliferado campañas
+        de información en diferentes temas, que afectan la vida cotidiana de las
+        personas. Para ello, acudimos a expertos como tú para mejorar los
+        procesos de detección y decisión de información de las personas a nivel
+        mundial.
+      </p>
+      <div class="mobile-tip" *ngIf="showMobileTip()">
+        📱
+        <span
+          >Para una mejor experiencia, te recomendamos usar tu dispositivo en
+          horizontal</span
+        >
+      </div>
+      <div class="btn-center">
+        <button class="btn-primary" (click)="nextStep()">
+          Iniciar Análisis
+        </button>
+      </div>
+    </div>
+
+    <!-- ========== STEP 1: Consent — initial question ========== -->
+    <div class="consent-content anim" *ngIf="currentStep() === 1">
+      <div class="welcome-title">Consentimiento</div>
+
+      <div class="consent-body centered">
+        <p class="consent-text-lg">
+          Antes de comenzar, ¿te importaría responder algunas preguntas? Te
+          prometemos que se hará en un abrir y cerrar de ojos. 👀
+        </p>
+
+        <p class="error-text" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+
+        <div class="consent-buttons">
+          <button class="btn-consent btn-si" (click)="nextStep()">SÍ</button>
+          <button class="btn-consent btn-no" (click)="declineConsent()">
+            NO
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== STEP 2: Consent — objective + process ========== -->
+    <div class="consent-content anim" *ngIf="currentStep() === 2">
+      <div class="welcome-title">Consentimiento</div>
+
+      <div class="consent-body">
+        <p class="consent-text">1. Objetivo.</p>
+        <p class="consent-text">
+          El propósito de esta investigación es estudiar los mecanismos básicos
+          de discriminación y decisión que se dan en todas las personas en
+          situaciones de aprendizaje cuando se consume información.
+        </p>
+        <label class="consent-confirm">
+          <input type="checkbox" [(ngModel)]="consent2a" />
+          <span
+            >Conozco el propósito del proyecto y entiendo que la información
+            recolectada será utilizada para fines académicos.</span
+          >
+        </label>
+
+        <p class="consent-text mt-1">
+          <strong>2.</strong> Para ello emplearemos un proceso que durará
+          aproximadamente 8 a 10 minutos y que el proceso de análisis comprende:
+          1) Presentación de consentimiento informado; 2. Presentación de
+          cuestionario; 3) Instrucciones; 4) Ejemplo guiado; 5) Análisis de
+          detección; 6) Análisis de decisión; 7) Incentivos.
+        </p>
+
+        <p class="consent-text mt-1">
+          Se presentarán una serie de textos con informaciones reales y falsas
+          para que, empleando el ratón del ordenador, responda a sencillas
+          preguntas sobre ellas.
+        </p>
+
+        <label class="consent-confirm">
+          <input type="checkbox" [(ngModel)]="consent2b" />
+          <span
+            >Comprendo que mi participación será un proceso de análisis de
+            información y que tendrá una duración aproximada.</span
+          >
+        </label>
+      </div>
+
+      <p class="error-text" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+
+      <div class="btn-center mt-1">
+        <button class="btn-primary" (click)="nextStep()">Continuar</button>
+      </div>
+    </div>
+
+    <!-- ========== STEP 3: Consent — privacy + risks ========== -->
+    <div class="consent-content anim" *ngIf="currentStep() === 3">
+      <div class="welcome-title">Consentimiento</div>
+
+      <div class="consent-body">
+        <p class="consent-section-title">5. Privacidad y confidencialidad:</p>
+        <ol class="consent-text">
+          <li>
+            La información obtenida será manejada de manera confidencial,
+            anónima y sólo se usará con fines investigativos. No será
+            relacionada con datos identificativos.
+          </li>
+          <li>
+            La información que obtendrá estará relacionada con saberes,
+            intereses y experiencias de carácter personal relacionado con la
+            experticia en consumo de información.
+          </li>
+        </ol>
+        <label class="consent-confirm">
+          <input type="checkbox" [(ngModel)]="consent3a" />
+          <span
+            >Autorizo a llevar a cabo el tratamiento de mis datos personales
+            conforme a la política de privacidad y protección de datos
+            personales.</span
+          >
+        </label>
+
+        <p class="consent-section-title mt-1">6. Riesgos e incomodidades:</p>
+        <ol class="consent-text">
+          <li>
+            El proceso no incurre en daños físicos y psicológicos donde esta
+            investigación está clasificada como de riesgo mínimo.
+          </li>
+        </ol>
+        <label class="consent-confirm">
+          <input type="checkbox" [(ngModel)]="consent3b" />
+          <span
+            >Entiendo que el análisis no representa ningún riesgo o peligro para
+            mí, ni para ninguna otra persona.</span
+          >
+        </label>
+      </div>
+
+      <p class="error-text" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+
+      <div class="btn-center mt-1">
+        <button class="btn-primary" (click)="nextStep()">Continuar</button>
+      </div>
+    </div>
+
+    <!-- ========== STEP 4: Consent — benefits + contact ========== -->
+    <div class="consent-content anim" *ngIf="currentStep() === 4">
+      <div class="welcome-title">Consentimiento</div>
+
+      <div class="consent-body">
+        <p class="consent-section-title">7. Beneficios e información:</p>
+        <ol class="consent-text">
+          <li>
+            La participación en este estudio es voluntaria y no se obtiene
+            ningún beneficio económico.
+          </li>
+        </ol>
+        <label class="consent-confirm">
+          <input type="checkbox" [(ngModel)]="consent4a" />
+          <span
+            >Doy cuenta de que NO recibiré dinero por participar en este estudio
+            y a cambio recibiré un incentivo del proyecto.</span
+          >
+        </label>
+
+        <p class="consent-section-title mt-1">8. Contacto</p>
+        <ol class="consent-text">
+          <li>
+            Si desea conocer los resultados de esta investigación puedes
+            contactar al Investigador responsable de este estudio:
+            <br />
+            <span class="consent-contact">
+              José Alejandro Aristizábal Cuéllar, PhD &nbsp; E-mail:
+              <a href="mailto:josea.aristizabal@gmail.com"
+                >josea.aristizabal&#64;gmail.com</a
+              >
+              &nbsp;
+              <a
+                href="https://linkedin.com/in/joseaaristizabalc"
+                target="_blank"
+                rel="noopener"
+                >linkedin.com/in/joseaaristizabalc</a
+              >
+            </span>
+          </li>
+        </ol>
+        <label class="consent-confirm">
+          <input type="checkbox" [(ngModel)]="consent4b" />
+          <span>Puedo obtener información del proyecto.</span>
+        </label>
+      </div>
+
+      <p class="error-text" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+
+      <div class="btn-center mt-1">
+        <button class="btn-primary" (click)="nextStep()">
+          ¡Vamos a comenzar!
+        </button>
+      </div>
+    </div>
+
+    <!-- ========== STEP 5: Registration form ========== -->
+    <div class="form-content anim" *ngIf="currentStep() === 5">
+      <h2 class="form-title">Registro de experto</h2>
+      <p class="form-subtitle">
+        ¡Estupendo! Muchas gracias. ¡Ahora comenzamos con el registro para que
+        puedas trabajar como experto en verificación! Pero primero, ¿Cuál sería
+        tu nombre o alias de experto?
+      </p>
+
+      <div class="form-group">
+        <label for="alias">Alias / Nombre</label>
+        <input
+          id="alias"
+          type="text"
+          [(ngModel)]="alias"
+          placeholder="Ej: María G."
+          maxlength="100"
+        />
+      </div>
+      <div class="btn-center mt-1">
+        <button class="btn-primary" (click)="nextStep()">Continuar</button>
+      </div>
+    </div>
+
+    <div class="form-content anim" *ngIf="currentStep() === 6">
+      <div class="form-group">
+        <label for="sex">Sexo</label>
+        <select id="sex" [(ngModel)]="sex">
+          <option [ngValue]="null" disabled>Selecciona</option>
+          <option *ngFor="let opt of sexOptions" [ngValue]="opt.value">
+            {{ opt.label }}
+          </option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="age">Edad</label>
+        <input
+          id="age"
+          type="number"
+          [(ngModel)]="age"
+          placeholder="Ej: 22"
+          min="5"
+          max="120"
+        />
+      </div>
+
+      <div class="navigation-buttons">
+        <button class="btn-back" (click)="prevStep()">← Atrás</button>
+        <button class="btn-primary" (click)="nextStep()">Continuar</button>
+      </div>
+    </div>
+
+    <div class="form-content anim" *ngIf="currentStep() === 7">
+      <div class="form-group">
+        <label for="email">Correo electrónico</label>
+        <input
+          id="email"
+          type="email"
+          [(ngModel)]="email"
+          placeholder="tu@correo.com"
+        />
+      </div>
+      <div class="form-group">
+        <label for="region">País</label>
+        <input id="region" type="text" [(ngModel)]="region" maxlength="100" />
+      </div>
+
+      <p class="error-text" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+
+      <div class="navigation-buttons">
+        <button class="btn-back" (click)="prevStep()">← Atrás</button>
+        <button
+          class="btn-primary"
+          [disabled]="isLoading()"
+          (click)="submitRegistration()"
+        >
+          {{ isLoading() ? "Registrando..." : "Iniciar investigación" }}
+        </button>
+      </div>
+    </div>
+  </app-glass-card>
+
+  <app-loading *ngIf="isLoading()" />
+</section>

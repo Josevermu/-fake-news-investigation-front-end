@@ -1,0 +1,27 @@
+<section class="screen anim">
+  <app-glass-card>
+
+    <div class="welcome-content">
+      <div class="welcome-icon">🤠</div>
+      <h2 class="welcome-title">¡Datos registrados con éxito!</h2>
+      <p class="welcome-description">
+        Perfecto, tus datos de investigador han sido registrados.
+
+        A continuación, responderás un breve cuestionario 
+        sobre tus hábitos de consumo de información
+        eligiendo la opción en la escala que consideres oportuna.
+
+
+        ¿Listo para continuar?
+      </p>
+
+      <p class="error-text" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+
+      <div class="consent-buttons">
+        <button class="btn-consent btn-si" (click)="accept()">SÍ</button>
+        <button class="btn-consent btn-no" (click)="decline()">NO</button>
+      </div>
+    </div>
+
+  </app-glass-card>
+</section>

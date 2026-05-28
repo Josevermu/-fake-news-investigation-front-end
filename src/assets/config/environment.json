@@ -1,0 +1,4 @@
+{
+  "apiBaseUrl": "https://konradquiz-backend-prod.thankfulground-5d8aa353.eastus2.azurecontainerapps.io/api/v1",
+  "production": true
+}

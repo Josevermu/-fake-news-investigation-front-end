@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="es" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Análisis de Información</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&amp;family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Quicksand',sans-serif}
+
+.app-wrapper{width:100%;height:100%;overflow-y:auto;background:linear-gradient(135deg,#0b0e2b 0%,#1a1040 40%,#2d1454 100%);color:#e8dff5}
+
+.screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:24px;width:100%}
+.screen.active{display:flex}
+
+.glass-card{background:rgba(30,20,60,0.65);backdrop-filter:blur(18px);border:1px solid rgba(255,170,80,0.15);border-radius:16px;padding:28px;max-width:640px;width:100%}
+
+.btn-primary{background:linear-gradient(135deg,#ff6b35,#ffb347);color:#1a1040;font-weight:700;border:none;padding:14px 28px;border-radius:10px;cursor:pointer;font-size:1rem;transition:all .3s ease;font-family:'Quicksand',sans-serif}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(255,107,53,0.4)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+
+.progress-bar{height:6px;background:rgba(255,170,80,0.15);border-radius:3px;overflow:hidden;width:100%}
+.progress-fill{height:100%;background:linear-gradient(90deg,#ff6b35,#a855f7);border-radius:3px;transition:width .5s ease}
+
+/* Scale slider */
+.scale-container{position:relative;width:100%;margin:20px 0 10px}
+.scale-labels{display:flex;justify-content:space-between;font-size:.7rem;color:rgba(232,223,245,0.6);margin-bottom:20px;text-align:center}
+.scale-labels span{flex:1;padding:0 2px}
+input[type=range]{-webkit-appearance:none;width:100%;height:8px;border-radius:4px;background:linear-gradient(90deg,#e74c3c,#e67e22,#95a5a6,#3498db,#2ecc71);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#fff;box-shadow:0 0 10px rgba(255,107,53,0.5);cursor:pointer;border:3px solid #ff6b35;transition:all .2s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15);box-shadow:0 0 18px rgba(255,107,53,0.7)}
+input[type=range]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:#fff;box-shadow:0 0 10px rgba(255,107,53,0.5);cursor:pointer;border:3px solid #ff6b35}
+.scale-value{text-align:center;font-size:2rem;font-weight:800;color:#ffb347;margin-top:8px;font-family:'Nunito',sans-serif}
+.scale-ticks{display:flex;justify-content:space-between;padding:0 2px;margin-top:4px}
+.scale-ticks span{font-size:.65rem;color:rgba(232,223,245,0.35)}
+
+/* Success toast */
+.toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.8);background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff;padding:20px 32px;border-radius:14px;font-weight:700;font-size:1.1rem;z-index:999;opacity:0;pointer-events:none;transition:all .3s ease;box-shadow:0 10px 40px rgba(46,204,113,0.4);text-align:center;font-family:'Nunito',sans-serif}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.toast i{margin-bottom:6px}
+
+/* Reward cards */
+.reward-card{background:rgba(30,20,60,0.5);border:1px solid rgba(255,170,80,0.12);border-radius:12px;padding:18px 14px;text-align:center;flex:1;min-width:100px;transition:all .3s ease}
+.reward-card:hover{transform:translateY(-4px);border-color:rgba(255,170,80,0.4)}
+.reward-card .emoji{font-size:2rem;margin-bottom:8px}
+.reward-card .r-title{font-weight:700;font-size:.85rem;color:#ffb347;margin-bottom:4px}
+.reward-card .r-desc{font-size:.72rem;color:rgba(232,223,245,0.6)}
+
+@keyframes fadeInUp{from{opacity:0;transform:translateY(25px)}to{opacity:1;transform:translateY(0)}}
+.anim{animation:fadeInUp .5s ease-out forwards}
+.d1{animation-delay:.1s;opacity:0}.d2{animation-delay:.2s;opacity:0}.d3{animation-delay:.3s;opacity:0}.d4{animation-delay:.4s;opacity:0}
+</style>
+  <style>body { box-sizing: border-box; }</style>
+ </head>
+ <body>
+  <div class="app-wrapper" id="app"><!-- Toast -->
+   <div class="toast" id="toast">
+    <div>
+     <i data-lucide="check-circle" style="width:28px;height:28px;display:inline-block"></i>
+    </div> Su respuesta fue guardada exitosamente ✓
+   </div><!-- Screen 0: Welcome -->
+   <div class="screen active" id="screen-welcome">
+    <div class="glass-card anim text-center">
+     <div style="font-size:3rem;margin-bottom:12px">
+      🔬
+     </div>
+     <h1 class="text-2xl font-bold mb-2" style="font-family:'Nunito',sans-serif;color:#ffb347" id="titleEl">Análisis de Información</h1>
+     <p class="text-sm mb-1" style="color:rgba(232,223,245,0.7)">Investigación Académica</p>
+     <p class="text-xs mb-6" style="color:rgba(232,223,245,0.5)">Este cuestionario forma parte de una investigación sobre percepción de información. Tus respuestas son anónimas y confidenciales.</p><button class="btn-primary w-full" onclick="startSurvey()">Comenzar</button>
+    </div>
+   </div><!-- Screen 1: Questions -->
+   <div class="screen" id="screen-questions">
+    <div class="glass-card" style="max-width:680px">
+     <div class="flex items-center justify-between mb-4"><span class="text-xs" style="color:rgba(232,223,245,0.5)" id="qCounter">Pregunta 1 de 10</span> <span class="text-xs font-bold" style="color:#ffb347" id="qPercent">0%</span>
+     </div>
+     <div class="progress-bar mb-5">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+     </div>
+     <p class="text-base font-semibold mb-6" id="qText" style="line-height:1.6;color:#e8dff5"></p>
+     <div class="scale-container">
+      <div class="scale-labels"><span>Totalmente<br>
+        Falsa</span> <span>Probablemente<br>
+        Falsa</span> <span>Neutral</span> <span>Probablemente<br>
+        Real</span> <span>Totalmente<br>
+        Real</span>
+      </div><input type="range" min="0" max="100" step="5" value="50" id="scaleSlider" oninput="updateScaleValue(this.value)">
+      <div class="scale-ticks"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+      </div>
+      <div class="scale-value" id="scaleVal">
+       50
+      </div>
+     </div><button class="btn-primary w-full mt-4" id="confirmBtn" onclick="confirmAnswer()">Confirmar Respuesta</button>
+    </div>
+   </div><!-- Screen 2: Reward -->
+   <div class="screen" id="screen-reward">
+    <div class="glass-card text-center" style="max-width:700px">
+     <div style="font-size:2.5rem;margin-bottom:8px">
+      🎁
+     </div>
+     <h2 class="text-xl font-bold mb-2" style="color:#ffb347;font-family:'Nunito',sans-serif">¡Gracias por participar!</h2>
+     <p class="text-sm mb-5" style="color:rgba(232,223,245,0.6)">Como agradecimiento, puedes elegir una recompensa:</p>
+     <div class="flex gap-3 flex-wrap justify-center mb-5" id="rewardContainer"><!-- sorted least to most favorable, left to right -->
+     </div>
+     <p class="text-xs" style="color:rgba(232,223,245,0.35)">La recompensa es simbólica y forma parte del estudio.</p>
+    </div>
+   </div><!-- Screen 3: End -->
+   <div class="screen" id="screen-end">
+    <div class="glass-card text-center anim">
+     <div style="font-size:3rem;margin-bottom:12px">
+      ✅
+     </div>
+     <h2 class="text-xl font-bold mb-2" style="color:#ffb347;font-family:'Nunito',sans-serif">¡Encuesta Completada!</h2>
+     <p class="text-sm" style="color:rgba(232,223,245,0.6)">Tus respuestas han sido registradas. Gracias por tu tiempo.</p>
+    </div>
+   </div>
+  </div>
+  <script>
+const questions = [
+  "La vacuna contra la gripe puede causar la gripe.",
+  "El cambio climático es causado principalmente por actividades humanas.",
+  "Los teléfonos móviles causan cáncer cerebral.",
+  "La Tierra es plana según evidencia científica reciente.",
+  "El ejercicio regular reduce el riesgo de enfermedades cardíacas.",
+  "El agua fluorada es utilizada para control mental.",
+  "Los antibióticos pueden combatir infecciones virales.",
+  "La inteligencia artificial superará a los humanos en todas las tareas para 2030.",
+  "Las abejas son esenciales para la polinización de cultivos alimentarios.",
+  "Los alimentos orgánicos son siempre más nutritivos que los convencionales."
+];
+
+// Rewards sorted: least favorable → most favorable (left to right)
+const rewards = [
+  { emoji:"📄", title:"Resumen PDF", desc:"Resumen del estudio" },
+  { emoji:"🎟️", title:"Cupón 5%", desc:"Descuento en librería" },
+  { emoji:"☕", title:"Café gratis", desc:"En cafetería del campus" },
+  { emoji:"📚", title:"E-book", desc:"Libro digital de regalo" },
+  { emoji:"🏆", title:"Certificado", desc:"Certificado de participación" }
+];
+
+let currentQ = 0;
+let participantId = 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
+let allData = [];
+
+// Data SDK
+const dataHandler = {
+  onDataChanged(data) { allData = data; }
+};
+
+(async()=>{
+  const r = await window.dataSdk.init(dataHandler);
+  if(!r.isOk) console.error("Data SDK init failed");
+})();
+
+// Element SDK
+const defaultConfig = {
+  survey_title: "Análisis de Información",
+  background_color: "#0b0e2b",
+  surface_color: "#1e143c",
+  text_color: "#e8dff5",
+  accent_color: "#ff6b35",
+  secondary_color: "#a855f7",
+  font_family: "Quicksand",
+  font_size: 16
+};
+
+function applyConfig(cfg) {
+  const t = cfg.survey_title || defaultConfig.survey_title;
+  const el = document.getElementById('titleEl');
+  if(el) el.textContent = t;
+
+  const bg = cfg.background_color || defaultConfig.background_color;
+  const sf = cfg.surface_color || defaultConfig.surface_color;
+  const tx = cfg.text_color || defaultConfig.text_color;
+  const ac = cfg.accent_color || defaultConfig.accent_color;
+  const sc = cfg.secondary_color || defaultConfig.secondary_color;
+  const ff = cfg.font_family || defaultConfig.font_family;
+  const fs = cfg.font_size || defaultConfig.font_size;
+
+  document.querySelector('.app-wrapper').style.background = `linear-gradient(135deg,${bg} 0%,${sf} 40%,${sc} 100%)`;
+  document.querySelectorAll('.glass-card').forEach(c=>{
+    c.style.background = `rgba(30,20,60,0.65)`;
+    c.style.borderColor = `${ac}22`;
+    c.style.color = tx;
+  });
+  document.querySelectorAll('.btn-primary').forEach(b=>{
+    b.style.background = `linear-gradient(135deg,${ac},${ac}99)`;
+  });
+  document.body.style.fontFamily = `${ff}, Quicksand, sans-serif`;
+  document.body.style.fontSize = fs + 'px';
+}
+
+window.elementSdk.init({
+  defaultConfig,
+  onConfigChange: async(cfg)=> applyConfig(cfg),
+  mapToCapabilities:(cfg)=>({
+    recolorables:[
+      {get:()=>cfg.background_color||defaultConfig.background_color, set:v=>{cfg.background_color=v;window.elementSdk.setConfig({background_color:v})}},
+      {get:()=>cfg.surface_color||defaultConfig.surface_color, set:v=>{cfg.surface_color=v;window.elementSdk.setConfig({surface_color:v})}},
+      {get:()=>cfg.text_color||defaultConfig.text_color, set:v=>{cfg.text_color=v;window.elementSdk.setConfig({text_color:v})}},
+      {get:()=>cfg.accent_color||defaultConfig.accent_color, set:v=>{cfg.accent_color=v;window.elementSdk.setConfig({accent_color:v})}},
+      {get:()=>cfg.secondary_color||defaultConfig.secondary_color, set:v=>{cfg.secondary_color=v;window.elementSdk.setConfig({secondary_color:v})}}
+    ],
+    borderables:[],
+    fontEditable:{get:()=>cfg.font_family||defaultConfig.font_family,set:v=>{cfg.font_family=v;window.elementSdk.setConfig({font_family:v})}},
+    fontSizeable:{get:()=>cfg.font_size||defaultConfig.font_size,set:v=>{cfg.font_size=v;window.elementSdk.setConfig({font_size:v})}}
+  }),
+  mapToEditPanelValues:(cfg)=>new Map([["survey_title",cfg.survey_title||defaultConfig.survey_title]])
+});
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startSurvey(){
+  currentQ=0;
+  loadQuestion();
+  showScreen('screen-questions');
+}
+
+function loadQuestion(){
+  document.getElementById('qText').textContent = questions[currentQ];
+  document.getElementById('qCounter').textContent = `Pregunta ${currentQ+1} de ${questions.length}`;
+  const pct = Math.round((currentQ/questions.length)*100);
+  document.getElementById('qPercent').textContent = pct+'%';
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('scaleSlider').value = 50;
+  document.getElementById('scaleVal').textContent = '50';
+  document.getElementById('confirmBtn').disabled = false;
+}
+
+function updateScaleValue(v){ document.getElementById('scaleVal').textContent = v; }
+
+function showToast(){
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 800);
+}
+
+async function confirmAnswer(){
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+  const val = parseInt(document.getElementById('scaleSlider').value);
+
+  if(allData.length >= 999){
+    showToast();
+    btn.textContent = 'Confirmar Respuesta';
+    advanceQuestion();
+    return;
+  }
+
+  const result = await window.dataSdk.create({
+    participant_id: participantId,
+    question_id: 'q'+(currentQ+1),
+    response_value: val,
+    timestamp: new Date().toISOString()
+  });
+
+  btn.textContent = 'Confirmar Respuesta';
+  showToast();
+
+  if(!result.isOk){
+    console.error("Save failed");
+  }
+
+  setTimeout(()=> advanceQuestion(), 850);
+}
+
+function advanceQuestion(){
+  currentQ++;
+  if(currentQ >= questions.length){
+    document.getElementById('progressFill').style.width = '100%';
+    document.getElementById('qPercent').textContent = '100%';
+    setTimeout(()=> showRewards(), 300);
+  } else {
+    loadQuestion();
+  }
+}
+
+function showRewards(){
+  const c = document.getElementById('rewardContainer');
+  c.innerHTML = '';
+  rewards.forEach((r,i)=>{
+    const d = document.createElement('div');
+    d.className = 'reward-card anim';
+    d.style.animationDelay = (i*0.12)+'s';
+    d.style.opacity = '0';
+    d.innerHTML = `<div class="emoji">${r.emoji}</div><div class="r-title">${r.title}</div><div class="r-desc">${r.desc}</div>`;
+    d.onclick = ()=> selectReward(i);
+    c.appendChild(d);
+  });
+  showScreen('screen-reward');
+}
+
+function selectReward(i){
+  document.querySelectorAll('.reward-card').forEach((c,j)=>{
+    if(j===i){c.style.borderColor='#ff6b35';c.style.background='rgba(255,107,53,0.15)'}
+    else{c.style.borderColor='rgba(255,170,80,0.12)';c.style.background='rgba(30,20,60,0.5)'}
+  });
+  setTimeout(()=> showScreen('screen-end'), 600);
+}
+
+lucide.createIcons();
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9dedf479d4de26ac',t:'MTc3MzkzODgwNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

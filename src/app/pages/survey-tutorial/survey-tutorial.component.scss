@@ -1,0 +1,427 @@
+@import "colors";
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100svh;
+  padding: 24px;
+  width: 100%;
+}
+
+.tutorial-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex: 1;
+  padding: 20px 0;
+}
+
+.step-indicator {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 2rem;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  transition: all 0.3s ease;
+
+  &.active {
+    background: $accent-gold;
+    box-shadow: 0 0 10px rgba($accent-gold, 0.5);
+    transform: scale(1.3);
+  }
+
+  &.done {
+    background: $success-color;
+  }
+}
+
+.tutorial-icon {
+  font-size: 28px;
+  margin-bottom: 1rem;
+}
+
+.tutorial-title {
+  color: $accent-gold;
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+
+.tutorial-description {
+  font-size: 24px;
+  color: $text-primary;
+  line-height: 1.7;
+  max-width: 560px;
+  margin-bottom: 2.5rem;
+}
+
+.tutorial-buttons {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.btn-back {
+  background: transparent;
+  border: 1px solid $accent-gold;
+  color: $accent-gold;
+  font-weight: 700;
+  padding: 8px 24px;
+  border-radius: $border-radius-button;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba($accent-gold, 0.1);
+    transform: translateY(-1px);
+  }
+}
+
+.btn-next {
+  background: linear-gradient(135deg, $accent-orange, $accent-gold);
+  color: $dark-surface;
+  font-weight: 700;
+  border: none;
+  padding: 10px 28px;
+  border-radius: $border-radius-button;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// === Example question box ===
+.example-question-box {
+  width: 100%;
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 170, 80, 0.2);
+  border-radius: 12px;
+}
+
+.example-question-text {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: $text-primary;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+// === Scale components (replicated from survey.component.scss) ===
+.scale-container {
+  position: relative;
+  width: 100%;
+  margin: 20px 0 10px;
+}
+
+.scale-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 24px;
+  color: $text-tertiary;
+  margin-bottom: 16px;
+  text-align: center;
+
+  span {
+    flex: 1;
+    padding: 0 2px;
+  }
+}
+
+.scale-labels-top {
+  display: grid;
+  grid-template-columns: repeat(21, 1fr);
+  font-size: 18px;
+  color: $text-tertiary;
+  margin-bottom: 8px;
+  text-align: center;
+  gap: 2px;
+
+  .label-totalmente {
+    grid-column: span 1;
+    &:first-child {
+      grid-column: 1 / 2;
+    }
+    &:last-child {
+      grid-column: 21 / 22;
+    }
+  }
+  .label-bastante {
+    grid-column: span 4;
+    &:nth-child(2) {
+      grid-column: 2 / 6;
+    }
+    &:nth-child(5) {
+      grid-column: 17 / 21;
+    }
+  }
+  .label-poco {
+    grid-column: span 5;
+    &:nth-child(3) {
+      grid-column: 6 / 11;
+    }
+    &:nth-child(4) {
+      grid-column: 12 / 17;
+    }
+  }
+}
+
+.scale-row {
+  display: grid;
+  grid-template-columns: repeat(21, 1fr);
+  gap: 2px;
+  width: 100%;
+}
+
+.scale-btn {
+  background: rgba(46, 204, 113, 0.15);
+  color: $success-color;
+  border: 1px solid $success-color;
+  border-radius: 6px;
+  padding: 8px 2px;
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  min-width: 0;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: rgba(46, 204, 113, 0.3);
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+  }
+
+  &.selected {
+    background: rgba(46, 204, 113, 0.45);
+    transform: scale(1.15);
+    box-shadow: 0 0 16px rgba(46, 204, 113, 0.5);
+    border: 2px solid $success-color;
+    color: $white-color;
+  }
+
+  &.locked {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+// === Feedback panel ===
+.feedback-panel {
+  background: rgba(46, 204, 113, 0.1);
+  border: 1px solid $success-color;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.feedback-label {
+  font-size: 24px;
+  font-weight: 700;
+  color: $success-color;
+  margin: 0;
+}
+
+// === Scale guide text ===
+.scale-guide-text {
+  background: rgba(255, 170, 80, 0.08);
+  border: 1px solid rgba(255, 170, 80, 0.3);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-top: 1.25rem;
+  text-align: left;
+}
+
+.guide-instruction {
+  font-size: 18px;
+  color: $accent-gold;
+  margin: 0 0 0.75rem 0;
+  text-align: center;
+}
+
+.guide-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 15px;
+  line-height: 1.5;
+  color: $text-primary;
+}
+
+.guide-left,
+.guide-center,
+.guide-right {
+  display: block;
+}
+
+.guide-center {
+  text-align: center;
+  color: $text-secondary;
+}
+
+// Mobile optimizations
+@media (max-width: 768px) {
+  .screen {
+    padding: 16px;
+  }
+
+  .tutorial-title {
+    font-size: 22px;
+  }
+
+  .tutorial-description {
+    font-size: 16px;
+  }
+
+  .example-question-text {
+    font-size: 16px;
+  }
+
+  .scale-labels-top {
+    font-size: 12px;
+  }
+
+  .scale-labels {
+    font-size: 14px;
+  }
+
+  .scale-btn {
+    font-size: 14px;
+    padding: 4px 1px;
+  }
+
+  .feedback-label {
+    font-size: 16px;
+  }
+
+  .btn-next,
+  .btn-back {
+    font-size: 14px;
+    padding: 8px 20px;
+  }
+
+  .guide-instruction {
+    font-size: 14px;
+  }
+
+  .guide-row {
+    font-size: 12px;
+  }
+}
+
+// === Mobile landscape optimizations ===
+@media (max-width: 768px) and (orientation: landscape) {
+  .screen {
+    padding: 8px 12px;
+  }
+
+  .tutorial-content {
+    padding: 0;
+  }
+
+  .tutorial-header {
+    margin-bottom: 0.5rem;
+  }
+
+  .tutorial-title {
+    font-size: 20px;
+    margin-bottom: 0.25rem;
+  }
+
+  .tutorial-description {
+    font-size: 14px;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+  }
+
+  .step-indicator {
+    font-size: 12px;
+    margin-bottom: 0.5rem;
+  }
+
+  .tutorial-section {
+    margin-bottom: 0.75rem;
+  }
+
+  .example-question-text {
+    font-size: 14px;
+    margin-bottom: 0.5rem;
+  }
+
+  .scale-labels-top {
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+
+  .scale-labels {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .scale-row {
+    gap: 1px;
+  }
+
+  .scale-btn {
+    font-size: 12px;
+    padding: 4px 1px;
+  }
+
+  .feedback-panel {
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  .feedback-label {
+    font-size: 14px;
+  }
+
+  .scale-guide-text {
+    padding: 0.75rem;
+    margin-top: 0.75rem;
+  }
+
+  .guide-instruction {
+    font-size: 13px;
+    margin-bottom: 0.5rem;
+  }
+
+  .guide-row {
+    font-size: 11px;
+    gap: 0.3rem;
+  }
+
+  .navigation-buttons {
+    margin-top: 0.75rem;
+  }
+
+  .btn-next,
+  .btn-back {
+    font-size: 13px;
+    padding: 6px 16px;
+  }
+}

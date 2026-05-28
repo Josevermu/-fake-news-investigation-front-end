@@ -1,0 +1,13 @@
+<div class="global-progress-bar" *ngIf="shouldShowProgressBar()">
+  <div class="progress-track">
+    <div 
+      class="progress-fill" 
+      [style.width.%]="progressPercent()"
+      [class.pulse]="isTransitioning()">
+    </div>
+  </div>
+  <div class="progress-info">
+    <span class="progress-stage">{{ currentStageLabel() }}</span>
+    <span class="progress-percent">{{ progressPercent() }}%</span>
+  </div>
+</div>

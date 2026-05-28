@@ -1,0 +1,65 @@
+<section class="screen anim">
+  <app-glass-card>
+
+    <div class="pre-survey-header">
+      <h2 class="pre-survey-title">Cuestionario previo</h2>
+      <p class="pre-survey-subtitle">
+        Indica tu nivel de acuerdo con cada afirmación usando la escala del
+        <strong>0</strong> al <strong>100</strong>.
+        <br />
+        Una vez seleccionada, tu respuesta quedará registrada y no podrá cambiarse.
+      </p>
+
+      <!-- Progress bar -->
+      <div class="progress-track">
+        <div
+          class="progress-fill"
+          [style.width.%]="progressPercent()"
+        ></div>
+      </div>
+      <p class="progress-label">
+        Grupo {{ currentGroupIndex() + 1 }} de {{ totalGroups }}
+        &nbsp;·&nbsp; {{ lockedCodes().size }} / {{ profileQuestions.length }} respondidas
+      </p>
+    </div>
+
+    <!-- Question cards -->
+    <div class="questions-list">
+      <div
+        class="question-card"
+        *ngFor="let q of currentGroupQuestions(); let i = index"
+        [class.answered]="isLocked(q.questionCode)"
+      >
+        <p class="question-number">
+          Pregunta {{ currentGroupIndex() * 3 + i + 1 }}
+        </p>
+        <p class="question-text">{{ q.itemText }}</p>
+
+        <!-- Scale anchors -->
+        <div class="scale-anchors">
+          <span>Nada</span>
+          <span>Poco</span>
+          <span>Bastante</span>
+          <span>Mucho</span>
+        </div>
+        <div class="scale-row scale-row--labeled">
+          <button
+            *ngFor="let opt of scale"
+            class="scale-btn scale-btn--labeled"
+            [class.selected]="getAnswer(q.questionCode) === opt.value"
+            [class.locked]="isLocked(q.questionCode)"
+            [disabled]="isLocked(q.questionCode)"
+            (click)="selectAnswer(q.questionCode, opt.value)"
+          >
+            {{ opt.label }}
+          </button>
+        </div>
+
+        <p class="answer-display" *ngIf="isLocked(q.questionCode)">
+          ✔ Respuesta registrada: <strong>{{ getAnswer(q.questionCode) }}</strong>
+        </p>
+      </div>
+    </div>
+
+  </app-glass-card>
+</section>
