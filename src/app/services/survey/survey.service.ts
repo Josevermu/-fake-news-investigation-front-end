@@ -38,12 +38,6 @@ export class SurveyService {
   /** Symbolic rewards (frontend-only). */
   public readonly rewards: WritableSignal<Reward[]> = signal(DEFAULT_REWARDS);
 
-
-
-
-
-
-
   get profileQuestions()    { return this.session()?.profileQuestions    ?? []; }
   get part1Questions()      { return this.session()?.newsPart1Questions  ?? []; }
   get part2Questions()      { return this.session()?.newsPart2Questions  ?? []; }
@@ -174,8 +168,9 @@ get questions(): QuestionSession[] {
     score: number,
     questionOrder: number,
     answerType: AnswerType,     // ← new
+    novelty?: string | null,    // N = new, V = old (only for NEWS questions)
   ): void {
-    const answer: AnswerRequest = { questionCode, answerType, score, questionOrder };
+    const answer: AnswerRequest = { questionCode, answerType, score, questionOrder, novelty };
     this.collectedAnswers.update((prev) => [...prev, answer]);
   }
 

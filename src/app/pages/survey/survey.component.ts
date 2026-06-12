@@ -152,12 +152,17 @@ export class SurveyComponent implements OnInit {
     
     const answerType = this.isMemoryTest ? AnswerType.MEMORY_TEST : AnswerType.FAKE_DETECTION;
 
+    // Determine novelty: V = old (seen in Part 1), N = new (not seen before)
+    const isOld = this.isOldNews(question.questionCode);
+    const novelty = isOld ? 'V' : 'N';
+
     // Record answer locally
     this.surveyService.recordAnswer(
       question.questionCode,
       value,
       question.assignedOrder,
-      answerType
+      answerType,
+      novelty
     );
 
     // Show active feedback for GROUP_A

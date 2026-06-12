@@ -1,0 +1,123 @@
+@import "colors";
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100svh;
+  padding: 24px;
+  width: 100%;
+}
+
+.control-room-content {
+  text-align: center;
+  max-width: 560px;
+}
+
+.control-room-title {
+  color: $accent-gold;
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+}
+
+.control-room-text {
+  font-size: 24px;
+  color: $text-secondary;
+  margin-bottom: 1.5rem;
+  line-height: 1.55;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+  text-align: left;
+
+  label {
+    display: block;
+    font-size: 20px;
+    font-weight: 600;
+    color: $text-secondary;
+    margin-bottom: 6px;
+  }
+
+  input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 170, 80, 0.25);
+    background: rgba(30, 20, 60, 0.5);
+    color: $text-primary;
+    font-size: 18px;
+    outline: none;
+    transition: border-color 0.3s ease;
+
+    &::placeholder {
+      color: $text-muted;
+    }
+
+    &:focus {
+      border-color: $accent-orange;
+      box-shadow: 0 0 8px rgba(255, 107, 53, 0.2);
+    }
+
+    &:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.error-text {
+  color: #ff6b6b;
+  font-size: 24px;
+  text-align: center;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, $accent-orange, $accent-gold);
+  color: $dark-surface;
+  font-weight: 700;
+  border: none;
+  padding: 10px 24px;
+  border-radius: $border-radius-button;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+.btn-center {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .control-room-title {
+    font-size: 24px;
+  }
+
+  .control-room-text,
+  .error-text {
+    font-size: 18px;
+  }
+
+  .form-group label {
+    font-size: 18px;
+  }
+}

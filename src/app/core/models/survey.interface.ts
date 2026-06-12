@@ -65,6 +65,7 @@ export interface AnswerRequest {
   answerType: AnswerType;   // ← new
   score: number;
   questionOrder: number;
+  novelty?: string | null;  // N = new in Part 2, V = old in Part 2 (seen in Part 1), null for PROFILE
 }
 
 /** POST /api/v1/participants/{id}/answers/batch */

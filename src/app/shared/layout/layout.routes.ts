@@ -92,6 +92,14 @@ export const LAYOUT_ROUTES: Routes = [
             (c) => c.CompletionComponent
           ),
       },
+      {
+        path: 'admin/control-room',
+        title: 'Control Room — Export CSV',
+        loadComponent: () =>
+          import('@pages/admin-control-room/admin-control-room.component').then(
+            (c) => c.AdminControlRoomComponent
+          ),
+      },
     ],
   },
 ];
