@@ -134,7 +134,7 @@ export class SurveyComponent implements OnInit {
       this.router.navigate(['/welcome']);
       return;
     }
-    
+
     // Initialize progress
     const currentIdx = this.surveyService.currentQuestionIndex();
     const total = this.surveyService.allNewsQuestions.length;
@@ -149,12 +149,13 @@ export class SurveyComponent implements OnInit {
 
     const question = this.currentQuestion;
     if (!question) return;
-    
+
     const answerType = this.isMemoryTest ? AnswerType.MEMORY_TEST : AnswerType.FAKE_DETECTION;
 
-    // Determine novelty: V = old (seen in Part 1), N = new (not seen before)
-    const isOld = this.isOldNews(question.questionCode);
-    const novelty = isOld ? 'V' : 'N';
+    // Determine novelty ONLY for MEMORY_TEST: V = old (seen in Part 1), N = new (not seen before)
+    const novelty = this.isMemoryTest 
+      ? (this.isOldNews(question.questionCode) ? 'V' : 'N')
+      : null;
 
     // Record answer locally
     this.surveyService.recordAnswer(
@@ -192,14 +193,14 @@ export class SurveyComponent implements OnInit {
       this.selectedValue.set(null);
       this.selectionLocked.set(false);
       this.showingFeedback.set(false);
-      
+
       const hasMore = this.surveyService.nextQuestion();
-      
+
       // Update progress
       const currentIdx = this.surveyService.currentQuestionIndex();
       const total = this.surveyService.allNewsQuestions.length;
       this.progressService.setSurveyProgress(currentIdx, total);
-      
+
       // Ensure UI updates immediately after the question index changes
       try { this.cdr.detectChanges(); } catch { /* no-op */ }
       if (!hasMore) {
