@@ -37,6 +37,7 @@ interface DashboardRow {
 interface BreakdownItem {
   label: string;
   count: number;
+  participantCount: number;
   averageScore: number | null;
   accuracyRate: number | null;
   percent: number;
@@ -91,6 +92,8 @@ export class AdminDashboardComponent {
   selectedPhase = '';
   selectedQuestionType = '';
   selectedConstructo = '';
+  selectedFormat = '';
+  selectedNewsSet = '';
   selectedParticipantId = '';
 
   onLogin(): void {
@@ -144,6 +147,8 @@ export class AdminDashboardComponent {
     this.selectedPhase = '';
     this.selectedQuestionType = '';
     this.selectedConstructo = '';
+    this.selectedFormat = '';
+    this.selectedNewsSet = '';
     this.selectedParticipantId = '';
   }
 
@@ -153,6 +158,8 @@ export class AdminDashboardComponent {
         (!this.selectedPhase || row.phase === this.selectedPhase) &&
         (!this.selectedQuestionType || row.questionType === this.selectedQuestionType) &&
         (!this.selectedConstructo || row.constructo === this.selectedConstructo) &&
+        (!this.selectedFormat || row.presentationFormat === this.selectedFormat) &&
+        (!this.selectedNewsSet || row.newsSet === this.selectedNewsSet) &&
         (!this.selectedParticipantId || row.participantId === this.selectedParticipantId)
       );
     });
@@ -232,6 +239,14 @@ export class AdminDashboardComponent {
     return this.uniqueValues(this.rows.map((row) => row.constructo));
   }
 
+  get formatOptions(): string[] {
+    return this.uniqueValues(this.rows.map((row) => row.presentationFormat));
+  }
+
+  get newsSetOptions(): string[] {
+    return this.uniqueValues(this.rows.map((row) => row.newsSet));
+  }
+
   get participantOptions(): string[] {
     return this.uniqueValues(this.rows.map((row) => row.participantId)).sort((a, b) => {
       const aNumber = Number(a);
@@ -250,8 +265,14 @@ export class AdminDashboardComponent {
       .sort((a, b) => (b.averageScore ?? -Infinity) - (a.averageScore ?? -Infinity));
   }
 
-  get questionTypeBreakdown(): BreakdownItem[] {
-    return this.buildBreakdown(this.filteredRows.map((row) => ({ label: row.questionType, row })));
+  get formatBreakdown(): BreakdownItem[] {
+    return this.buildBreakdown(this.filteredRows.map((row) => ({ label: row.presentationFormat, row })))
+      .sort((a, b) => (b.averageScore ?? -Infinity) - (a.averageScore ?? -Infinity));
+  }
+
+  get newsSetBreakdown(): BreakdownItem[] {
+    return this.buildBreakdown(this.filteredRows.map((row) => ({ label: row.newsSet, row })))
+      .sort((a, b) => (b.averageScore ?? -Infinity) - (a.averageScore ?? -Infinity));
   }
 
   get constructoBreakdown(): BreakdownItem[] {
@@ -280,10 +301,6 @@ export class AdminDashboardComponent {
         percent: total > 0 ? (count / total) * 100 : 0,
       }))
       .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
-  }
-
-  get questionTypeDonutBackground(): string {
-    return this.buildConicGradient(this.questionTypeBreakdown.map((item) => item.percent));
   }
 
   get accuracyDonutBackground(): string {
@@ -475,6 +492,12 @@ export class AdminDashboardComponent {
     }
     if (this.selectedConstructo && !this.constructoOptions.includes(this.selectedConstructo)) {
       this.selectedConstructo = '';
+    }
+    if (this.selectedFormat && !this.formatOptions.includes(this.selectedFormat)) {
+      this.selectedFormat = '';
+    }
+    if (this.selectedNewsSet && !this.newsSetOptions.includes(this.selectedNewsSet)) {
+      this.selectedNewsSet = '';
     }
     if (this.selectedParticipantId && !this.participantOptions.includes(this.selectedParticipantId)) {
       this.selectedParticipantId = '';
@@ -715,6 +738,7 @@ export class AdminDashboardComponent {
         return {
           label,
           count: rows.length,
+          participantCount: this.uniqueParticipants(rows).length,
           averageScore: this.average(this.numericScores(rows)),
           accuracyRate: evaluableRows.length > 0 ? (correct / evaluableRows.length) * 100 : null,
           percent: total > 0 ? (rows.length / total) * 100 : 0,
@@ -723,19 +747,4 @@ export class AdminDashboardComponent {
       .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'es'));
   }
 
-  private buildConicGradient(percentages: number[]): string {
-    if (percentages.length === 0) {
-      return 'conic-gradient(rgba(232, 223, 245, 0.12) 0% 100%)';
-    }
-
-    let cursor = 0;
-    const segments = percentages.map((percent, index) => {
-      const start = cursor;
-      const end = Math.min(100, cursor + percent);
-      cursor = end;
-      return `${this.chartColor(index)} ${start}% ${end}%`;
-    });
-
-    return `conic-gradient(${segments.join(', ')})`;
-  }
 }

@@ -119,6 +119,22 @@
           </div>
 
           <div class="form-group">
+            <label for="format-filter">Formato</label>
+            <select id="format-filter" [(ngModel)]="selectedFormat">
+              <option value="">Todos</option>
+              <option *ngFor="let format of formatOptions" [value]="format">{{ format }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="news-set-filter">News set</label>
+            <select id="news-set-filter" [(ngModel)]="selectedNewsSet">
+              <option value="">Todos</option>
+              <option *ngFor="let newsSet of newsSetOptions" [value]="newsSet">{{ newsSet }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
             <label for="participant-filter">Participant ID</label>
             <select id="participant-filter" [(ngModel)]="selectedParticipantId">
               <option value="">Todos</option>
@@ -164,11 +180,11 @@
       </section>
 
       <section class="visual-grid">
-        <article class="visual-card donut-card">
+        <article class="visual-card accuracy-card">
           <div class="visual-header">
             <div>
-              <p class="section-kicker">Rendimiento</p>
-              <h3>Exactitud en noticias</h3>
+              <p class="section-kicker">Respuestas NEWS</p>
+              <h3>Correctas vs. incorrectas</h3>
             </div>
           </div>
 
@@ -194,39 +210,75 @@
           </div>
         </article>
 
-        <article class="visual-card donut-card">
+        <article class="visual-card condition-card format-card">
           <div class="visual-header">
             <div>
-              <p class="section-kicker">Distribución</p>
-              <h3>Tipo de pregunta</h3>
+              <p class="section-kicker">Condición experimental</p>
+              <h3>Rendimiento por formato de presentación</h3>
             </div>
+            <span class="visual-subtitle">Score medio · exactitud NEWS</span>
           </div>
 
-          <div class="donut-layout" *ngIf="questionTypeBreakdown.length; else noQuestionTypeData">
-            <div class="donut" [style.background]="questionTypeDonutBackground">
-              <div class="donut-hole">
-                <strong>{{ responseCount }}</strong>
-                <span>respuestas</span>
+          <div class="condition-chart" *ngIf="formatBreakdown.length; else noFormatData">
+            <div class="condition-row" *ngFor="let item of formatBreakdown; let i = index">
+              <div class="condition-name">
+                <strong>{{ item.label }}</strong>
+                <small>{{ item.participantCount }} participantes</small>
               </div>
-            </div>
-            <div class="legend-list">
-              <div class="legend-row" *ngFor="let item of questionTypeBreakdown; let i = index">
-                <span class="legend-dot" [style.background]="chartColor(i)"></span>
-                <span>{{ item.label }}</span>
-                <strong>{{ item.count }}</strong>
+              <div class="condition-score">
+                <span>Score</span>
+                <strong>{{ formatNumber(item.averageScore) }}</strong>
+              </div>
+              <div class="condition-track">
+                <span [style.width.%]="scorePercent(item.averageScore)" [style.background]="chartColor(i)"></span>
+              </div>
+              <div class="condition-accuracy">
+                <span>Exactitud</span>
+                <strong>{{ formatPercent(item.accuracyRate) }}</strong>
               </div>
             </div>
           </div>
-          <ng-template #noQuestionTypeData><p class="empty-state">Sin datos para la selección actual.</p></ng-template>
+          <ng-template #noFormatData><p class="empty-state">Sin datos de formato para la selección actual.</p></ng-template>
+        </article>
+
+        <article class="visual-card condition-card news-set-card">
+          <div class="visual-header">
+            <div>
+              <p class="section-kicker">Material experimental</p>
+              <h3>Rendimiento por News set</h3>
+            </div>
+            <span class="visual-subtitle">Comparación entre conjuntos asignados</span>
+          </div>
+
+          <div class="condition-chart" *ngIf="newsSetBreakdown.length; else noNewsSetData">
+            <div class="condition-row" *ngFor="let item of newsSetBreakdown; let i = index">
+              <div class="condition-name">
+                <strong>{{ item.label }}</strong>
+                <small>{{ item.participantCount }} participantes</small>
+              </div>
+              <div class="condition-score">
+                <span>Score</span>
+                <strong>{{ formatNumber(item.averageScore) }}</strong>
+              </div>
+              <div class="condition-track">
+                <span [style.width.%]="scorePercent(item.averageScore)" [style.background]="chartColor(i + 2)"></span>
+              </div>
+              <div class="condition-accuracy">
+                <span>Exactitud</span>
+                <strong>{{ formatPercent(item.accuracyRate) }}</strong>
+              </div>
+            </div>
+          </div>
+          <ng-template #noNewsSetData><p class="empty-state">Sin datos de News set para la selección actual.</p></ng-template>
         </article>
 
         <article class="visual-card phase-card">
           <div class="visual-header">
             <div>
-              <p class="section-kicker">Comparación</p>
-              <h3>Media por fase</h3>
+              <p class="section-kicker">Secuencia experimental</p>
+              <h3>Rendimiento por fase</h3>
             </div>
-            <span class="visual-subtitle">Escala 0–100</span>
+            <span class="visual-subtitle">Score medio · exactitud NEWS</span>
           </div>
 
           <div class="column-chart" *ngIf="phaseBreakdown.length; else noPhaseData">
@@ -249,8 +301,8 @@
         <article class="visual-card construct-card">
           <div class="visual-header">
             <div>
-              <p class="section-kicker">Ranking</p>
-              <h3>Media por constructo</h3>
+              <p class="section-kicker">Perfil de respuestas</p>
+              <h3>Score medio por constructo</h3>
             </div>
             <span class="visual-subtitle">Top 12</span>
           </div>
@@ -273,8 +325,8 @@
         <article class="visual-card sdt-card">
           <div class="visual-header">
             <div>
-              <p class="section-kicker">Signal Detection Theory</p>
-              <h3>Distribución SDT</h3>
+              <p class="section-kicker">Memoria · Signal Detection Theory</p>
+              <h3>Patrón de respuestas SDT</h3>
             </div>
           </div>
 
@@ -303,20 +355,21 @@
 
       <section class="stats-strip">
         <div>
-          <span>Mediana</span>
+          <span>Mediana del score</span>
           <strong>{{ formatNumber(medianScore) }}</strong>
         </div>
         <div>
-          <span>Filas visibles</span>
-          <strong>{{ filteredRows.length }}</strong>
+          <span>Formatos en selección</span>
+          <strong>{{ formatBreakdown.length }}</strong>
         </div>
         <div>
-          <span>News correctas</span>
-          <strong>{{ correctNewsResponses }}</strong>
+          <span>News sets en selección</span>
+          <strong>{{ newsSetBreakdown.length }}</strong>
         </div>
         <div>
-          <span>News incorrectas</span>
-          <strong>{{ incorrectNewsResponses }}</strong>
+          <span>Balance NEWS</span>
+          <strong>{{ correctNewsResponses }} / {{ incorrectNewsResponses }}</strong>
+          <small>correctas / incorrectas</small>
         </div>
       </section>
 
