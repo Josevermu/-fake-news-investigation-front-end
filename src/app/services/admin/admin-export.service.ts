@@ -10,7 +10,7 @@ import { Observable, catchError, throwError } from 'rxjs';
 export class AdminExportService {
   private readonly http = inject(HttpService);
 
-  downloadCsv(username: string, password: string): Observable<Blob> {
+  fetchCsv(username: string, password: string): Observable<Blob> {
     const credentials = btoa(`${username}:${password}`);
     const headers = new HttpHeaders({
       Authorization: `Basic ${credentials}`,
@@ -26,5 +26,9 @@ export class AdminExportService {
           return throwError(() => error);
         })
       );
+  }
+
+  downloadCsv(username: string, password: string): Observable<Blob> {
+    return this.fetchCsv(username, password);
   }
 }

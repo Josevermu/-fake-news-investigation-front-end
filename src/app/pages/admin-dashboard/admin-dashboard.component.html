@@ -1,0 +1,299 @@
+<section class="dashboard-screen anim">
+  <ng-container *ngIf="!isAuthenticated; else dashboardContent">
+    <app-glass-card>
+      <div class="login-card">
+        <p class="eyebrow">ADMIN · ANALYTICS</p>
+        <h1>Dashboard del experimento</h1>
+        <p class="login-copy">
+          Usa las mismas credenciales del Control Room para cargar y analizar la información consolidada.
+        </p>
+
+        <div class="form-grid login-form">
+          <div class="form-group">
+            <label for="dashboard-username">Usuario</label>
+            <input
+              id="dashboard-username"
+              type="text"
+              [(ngModel)]="username"
+              [disabled]="isLoading()"
+              autocomplete="username"
+              placeholder="Ingresa tu usuario"
+              (keyup.enter)="onLogin()"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="dashboard-password">Contraseña</label>
+            <input
+              id="dashboard-password"
+              type="password"
+              [(ngModel)]="password"
+              [disabled]="isLoading()"
+              autocomplete="current-password"
+              placeholder="Ingresa tu contraseña"
+              (keyup.enter)="onLogin()"
+            />
+          </div>
+        </div>
+
+        <p class="error-text" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+
+        <button class="btn-primary" type="button" (click)="onLogin()" [disabled]="isLoading()">
+          {{ isLoading() ? 'Cargando datos...' : 'Entrar al dashboard' }}
+        </button>
+      </div>
+    </app-glass-card>
+  </ng-container>
+
+  <ng-template #dashboardContent>
+    <div class="dashboard-shell">
+      <header class="dashboard-header">
+        <div>
+          <p class="eyebrow">ADMIN · ANALYTICS</p>
+          <h1>Dashboard del experimento</h1>
+          <p class="header-copy">Resumen general y análisis interactivo de las respuestas almacenadas.</p>
+        </div>
+        <button class="btn-secondary" type="button" (click)="logout()">Cerrar sesión</button>
+      </header>
+
+      <section class="section-block">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">Visión general</p>
+            <h2>Estado de participación</h2>
+          </div>
+          <span class="data-badge">{{ rows.length }} filas cargadas</span>
+        </div>
+
+        <div class="kpi-grid">
+          <article class="kpi-card">
+            <span class="kpi-label">Registrados</span>
+            <strong>{{ totalRegistered }}</strong>
+            <small>Participantes únicos</small>
+          </article>
+          <article class="kpi-card">
+            <span class="kpi-label">Completaron</span>
+            <strong>{{ totalCompleted }}</strong>
+            <small>Con tiempo de finalización</small>
+          </article>
+          <article class="kpi-card">
+            <span class="kpi-label">Pendientes</span>
+            <strong>{{ totalPending }}</strong>
+            <small>Registrados sin completar</small>
+          </article>
+          <article class="kpi-card">
+            <span class="kpi-label">Tasa de finalización</span>
+            <strong>{{ completionRate | number:'1.1-1' }}%</strong>
+            <small>Completados / registrados</small>
+          </article>
+        </div>
+      </section>
+
+      <section class="section-block filter-panel">
+        <div class="section-heading compact">
+          <div>
+            <p class="section-kicker">Filtros</p>
+            <h2>Segmenta el análisis</h2>
+          </div>
+          <button class="link-button" type="button" (click)="clearFilters()">Limpiar filtros</button>
+        </div>
+
+        <div class="filters-grid">
+          <div class="form-group">
+            <label for="phase-filter">Fase del experimento</label>
+            <select id="phase-filter" [(ngModel)]="selectedPhase">
+              <option value="">Todas</option>
+              <option *ngFor="let phase of phaseOptions" [value]="phase">{{ phase }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="type-filter">Tipo de pregunta</label>
+            <select id="type-filter" [(ngModel)]="selectedQuestionType">
+              <option value="">Todos</option>
+              <option *ngFor="let type of questionTypeOptions" [value]="type">{{ type }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="construct-filter">Constructo</label>
+            <select id="construct-filter" [(ngModel)]="selectedConstructo">
+              <option value="">Todos</option>
+              <option *ngFor="let constructo of constructoOptions" [value]="constructo">{{ constructo }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="participant-filter">Participant ID</label>
+            <select id="participant-filter" [(ngModel)]="selectedParticipantId">
+              <option value="">Todos</option>
+              <option *ngFor="let participantId of participantOptions" [value]="participantId">
+                {{ participantId }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">Selección actual</p>
+            <h2>Estadísticos</h2>
+          </div>
+          <span class="data-badge">{{ filteredRows.length }} filas visibles</span>
+        </div>
+
+        <div class="kpi-grid analysis-grid">
+          <article class="kpi-card accent-card">
+            <span class="kpi-label">Participantes</span>
+            <strong>{{ filteredParticipantCount }}</strong>
+            <small>En la selección</small>
+          </article>
+          <article class="kpi-card">
+            <span class="kpi-label">Respuestas</span>
+            <strong>{{ responseCount }}</strong>
+            <small>Con respuesta/score</small>
+          </article>
+          <article class="kpi-card">
+            <span class="kpi-label">Media</span>
+            <strong>{{ formatNumber(averageScore) }}</strong>
+            <small>Score promedio</small>
+          </article>
+          <article class="kpi-card">
+            <span class="kpi-label">Mediana</span>
+            <strong>{{ formatNumber(medianScore) }}</strong>
+            <small>Score central</small>
+          </article>
+          <article class="kpi-card">
+            <span class="kpi-label">Desviación estándar</span>
+            <strong>{{ formatNumber(standardDeviation) }}</strong>
+            <small>Dispersión del score</small>
+          </article>
+          <article class="kpi-card">
+            <span class="kpi-label">Exactitud</span>
+            <strong>{{ formatPercent(accuracyRate) }}</strong>
+            <small>Solo preguntas NEWS evaluables</small>
+          </article>
+          <article class="kpi-card">
+            <span class="kpi-label">Tiempo promedio</span>
+            <strong>{{ formatDuration(averageCompletionTimeSeconds) }}</strong>
+            <small>Finalización del experimento</small>
+          </article>
+        </div>
+      </section>
+
+      <section class="visual-grid">
+        <article class="chart-card">
+          <div class="chart-header">
+            <div>
+              <p class="section-kicker">Distribución</p>
+              <h3>Por fase</h3>
+            </div>
+          </div>
+          <div class="bar-list" *ngIf="phaseBreakdown.length; else noPhaseData">
+            <div class="bar-row" *ngFor="let item of phaseBreakdown">
+              <div class="bar-meta">
+                <span>{{ item.label }}</span>
+                <strong>{{ item.count }}</strong>
+              </div>
+              <div class="bar-track"><span [style.width.%]="item.percent"></span></div>
+              <small>Media: {{ formatNumber(item.averageScore) }}</small>
+            </div>
+          </div>
+          <ng-template #noPhaseData><p class="empty-state">No hay valores de fase para esta selección.</p></ng-template>
+        </article>
+
+        <article class="chart-card">
+          <div class="chart-header">
+            <div>
+              <p class="section-kicker">Distribución</p>
+              <h3>Por tipo de pregunta</h3>
+            </div>
+          </div>
+          <div class="bar-list" *ngIf="questionTypeBreakdown.length; else noTypeData">
+            <div class="bar-row" *ngFor="let item of questionTypeBreakdown">
+              <div class="bar-meta">
+                <span>{{ item.label }}</span>
+                <strong>{{ item.count }}</strong>
+              </div>
+              <div class="bar-track"><span [style.width.%]="item.percent"></span></div>
+              <small>Media: {{ formatNumber(item.averageScore) }}</small>
+            </div>
+          </div>
+          <ng-template #noTypeData><p class="empty-state">No hay tipos de pregunta para esta selección.</p></ng-template>
+        </article>
+
+        <article class="chart-card wide-card">
+          <div class="chart-header">
+            <div>
+              <p class="section-kicker">Distribución</p>
+              <h3>Constructos principales</h3>
+            </div>
+          </div>
+          <div class="bar-list two-column-bars" *ngIf="constructoBreakdown.length; else noConstructData">
+            <div class="bar-row" *ngFor="let item of constructoBreakdown">
+              <div class="bar-meta">
+                <span>{{ item.label }}</span>
+                <strong>{{ item.count }}</strong>
+              </div>
+              <div class="bar-track"><span [style.width.%]="item.percent"></span></div>
+              <small>Media: {{ formatNumber(item.averageScore) }}</small>
+            </div>
+          </div>
+          <ng-template #noConstructData><p class="empty-state">No hay constructos para esta selección.</p></ng-template>
+        </article>
+      </section>
+
+      <section class="section-block">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">Detalle</p>
+            <h2>Resumen por participante</h2>
+          </div>
+          <span class="data-badge">{{ participantSummaries.length }} participantes</span>
+        </div>
+
+        <div class="table-wrap" *ngIf="participantSummaries.length; else noParticipantData">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Alias</th>
+                <th>Grupo</th>
+                <th>Formato</th>
+                <th>News set</th>
+                <th>Estado</th>
+                <th>Respuestas</th>
+                <th>Media</th>
+                <th>Mediana</th>
+                <th>Exactitud</th>
+                <th>Tiempo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let participant of participantSummaries">
+                <td><strong>{{ participant.participantId }}</strong></td>
+                <td>{{ participant.alias || '—' }}</td>
+                <td>{{ participant.group || '—' }}</td>
+                <td>{{ participant.format || '—' }}</td>
+                <td>{{ participant.newsSet || '—' }}</td>
+                <td>
+                  <span class="status-pill" [class.completed]="participant.completed">
+                    {{ participant.completed ? 'Completado' : 'Pendiente' }}
+                  </span>
+                </td>
+                <td>{{ participant.responses }}</td>
+                <td>{{ formatNumber(participant.averageScore) }}</td>
+                <td>{{ formatNumber(participant.medianScore) }}</td>
+                <td>{{ formatPercent(participant.accuracyRate) }}</td>
+                <td>{{ formatDuration(participant.completionTimeSeconds) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noParticipantData><p class="empty-state">No hay participantes que coincidan con los filtros.</p></ng-template>
+      </section>
+    </div>
+  </ng-template>
+</section>

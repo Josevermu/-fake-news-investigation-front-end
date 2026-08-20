@@ -100,6 +100,14 @@ export const LAYOUT_ROUTES: Routes = [
             (c) => c.AdminControlRoomComponent
           ),
       },
+      {
+        path: 'admin/dashboard',
+        title: 'Dashboard — Análisis del Experimento',
+        loadComponent: () =>
+          import('@pages/admin-dashboard/admin-dashboard.component').then(
+            (c) => c.AdminDashboardComponent
+          ),
+      },
     ],
   },
 ];
