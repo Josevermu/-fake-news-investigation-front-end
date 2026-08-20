@@ -670,12 +670,22 @@ export class AdminDashboardComponent {
       .filter((value): value is number => value !== null);
   }
 
-  private evaluableNewsRows(rows: DashboardRow[]): DashboardRow[] {
-    return rows.filter((row) => {
-      const value = row.isCorrect.toUpperCase();
-      return row.questionType.toUpperCase() === 'NEWS' && (value === 'TRUE' || value === 'FALSE');
-    });
+private evaluableNewsRows(rows: DashboardRow[]): DashboardRow[] {
+  return rows.filter((row) => this.correctnessStatus(row) !== null);
+}
+
+
+private correctnessStatus(row: DashboardRow): 'TRUE' | 'FALSE' | null {
+  if (row.questionType.trim().toUpperCase() !== 'NEWS') {
+    return null;
   }
+
+  const value = row.isCorrect.trim().toUpperCase();
+
+  return value === 'TRUE' || value === 'FALSE'
+    ? value
+    : null;
+}
 
   private toNumber(value: string): number | null {
     const trimmed = value.trim();

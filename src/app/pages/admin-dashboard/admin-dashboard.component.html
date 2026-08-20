@@ -77,9 +77,12 @@
         <div>
           <strong>Alcance actual del dataset</strong>
           <p>
-            El endpoint administrativo exporta únicamente participantes que ya completaron el experimento.
-            Por eso este dashboard no calcula registrados pendientes ni tasa de finalización.
-          </p>
+  El endpoint administrativo exporta únicamente participantes que ya completaron el experimento.
+  Por eso este dashboard no calcula registrados pendientes ni tasa de finalización.
+  Las preguntas PROFILE no tienen una respuesta correcta; cualquier valor
+  isCorrect = FALSE almacenado para PROFILE se considera no aplicable y se
+  excluye de todas las métricas de exactitud.
+</p>
         </div>
         <span class="data-badge">{{ rows.length }} filas cargadas</span>
       </section>
@@ -165,7 +168,7 @@
         <article class="kpi-card">
           <span class="kpi-label">Exactitud</span>
           <strong>{{ formatPercent(accuracyRate) }}</strong>
-          <small>NEWS con isCorrect evaluable</small>
+          <small>Solo NEWS · PROFILE no se evalúa</small>
         </article>
         <article class="kpi-card">
           <span class="kpi-label">Tiempo promedio</span>
