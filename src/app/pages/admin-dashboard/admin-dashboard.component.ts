@@ -38,6 +38,13 @@ interface BreakdownItem {
   label: string;
   count: number;
   averageScore: number | null;
+  accuracyRate: number | null;
+  percent: number;
+}
+
+interface DistributionItem {
+  label: string;
+  count: number;
   percent: number;
 }
 
@@ -52,8 +59,9 @@ interface ParticipantSummary {
   medianScore: number | null;
   accuracyRate: number | null;
   completionTimeSeconds: number | null;
-  completed: boolean;
 }
+
+type LoadMode = 'login' | 'refresh';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -64,14 +72,21 @@ interface ParticipantSummary {
 })
 export class AdminDashboardComponent {
   private readonly adminExportService = inject(AdminExportService);
+  private readonly chartPalette = ['#ffb347', '#a855f7', '#2ecc71', '#4fa3ff', '#ff6b6b', '#00c2a8', '#ff8f70'];
+
+  private authenticatedUsername = '';
+  private authenticatedPassword = '';
 
   isLoading: WritableSignal<boolean> = signal(false);
+  isRefreshing: WritableSignal<boolean> = signal(false);
   errorMessage: WritableSignal<string> = signal('');
+  refreshMessage: WritableSignal<string> = signal('');
 
   username = '';
   password = '';
   isAuthenticated = false;
   rows: DashboardRow[] = [];
+  lastUpdatedAt: Date | null = null;
 
   selectedPhase = '';
   selectedQuestionType = '';
@@ -83,42 +98,46 @@ export class AdminDashboardComponent {
       return;
     }
 
-    if (!this.username.trim() || !this.password) {
+    const username = this.username.trim();
+    const password = this.password;
+
+    if (!username || !password) {
       this.errorMessage.set('Debes ingresar usuario y contraseña.');
       return;
     }
 
     this.errorMessage.set('');
+    this.refreshMessage.set('');
     this.isLoading.set(true);
+    this.fetchDashboardData(username, password, 'login');
+  }
 
-    this.adminExportService.fetchCsv(this.username.trim(), this.password).subscribe({
-      next: (blob) => {
-        void this.loadDashboard(blob);
-      },
-      error: (err) => {
-        this.isLoading.set(false);
+  refreshData(): void {
+    if (!this.isAuthenticated || this.isRefreshing()) {
+      return;
+    }
 
-        if (err?.status === 401 || err?.status === 403) {
-          this.errorMessage.set('Credenciales no autorizadas.');
-          return;
-        }
+    if (!this.authenticatedUsername || !this.authenticatedPassword) {
+      this.errorMessage.set('La sesión administrativa no tiene credenciales activas. Vuelve a iniciar sesión.');
+      return;
+    }
 
-        if (err?.status === 0) {
-          this.errorMessage.set('No se pudo conectar con el servidor. Verifica tu conexión.');
-          return;
-        }
-
-        this.errorMessage.set('No fue posible cargar los datos del dashboard.');
-      },
-    });
+    this.errorMessage.set('');
+    this.refreshMessage.set('');
+    this.isRefreshing.set(true);
+    this.fetchDashboardData(this.authenticatedUsername, this.authenticatedPassword, 'refresh');
   }
 
   logout(): void {
+    this.authenticatedUsername = '';
+    this.authenticatedPassword = '';
     this.password = '';
     this.isAuthenticated = false;
     this.rows = [];
+    this.lastUpdatedAt = null;
     this.clearFilters();
     this.errorMessage.set('');
+    this.refreshMessage.set('');
   }
 
   clearFilters(): void {
@@ -126,26 +145,6 @@ export class AdminDashboardComponent {
     this.selectedQuestionType = '';
     this.selectedConstructo = '';
     this.selectedParticipantId = '';
-  }
-
-  get totalRegistered(): number {
-    return this.uniqueParticipants(this.rows).length;
-  }
-
-  get totalCompleted(): number {
-    return this.uniqueParticipants(this.rows).filter((row) => this.isCompleted(row)).length;
-  }
-
-  get totalPending(): number {
-    return Math.max(0, this.totalRegistered - this.totalCompleted);
-  }
-
-  get completionRate(): number {
-    if (this.totalRegistered === 0) {
-      return 0;
-    }
-
-    return (this.totalCompleted / this.totalRegistered) * 100;
   }
 
   get filteredRows(): DashboardRow[] {
@@ -159,7 +158,12 @@ export class AdminDashboardComponent {
     });
   }
 
-  get filteredParticipantCount(): number {
+  /**
+   * The current backend export contains completed experiments only.
+   * Therefore this number is the number of completed participants represented
+   * in the current filtered export, not the number of registered users.
+   */
+  get completedParticipantCount(): number {
     return this.uniqueParticipants(this.filteredRows).length;
   }
 
@@ -199,17 +203,21 @@ export class AdminDashboardComponent {
   }
 
   get accuracyRate(): number | null {
-    const evaluableRows = this.filteredRows.filter((row) => {
-      const value = row.isCorrect.toUpperCase();
-      return row.questionType.toUpperCase() === 'NEWS' && (value === 'TRUE' || value === 'FALSE');
-    });
-
+    const evaluableRows = this.evaluableNewsRows(this.filteredRows);
     if (evaluableRows.length === 0) {
       return null;
     }
 
     const correct = evaluableRows.filter((row) => row.isCorrect.toUpperCase() === 'TRUE').length;
     return (correct / evaluableRows.length) * 100;
+  }
+
+  get correctNewsResponses(): number {
+    return this.evaluableNewsRows(this.filteredRows).filter((row) => row.isCorrect.toUpperCase() === 'TRUE').length;
+  }
+
+  get incorrectNewsResponses(): number {
+    return this.evaluableNewsRows(this.filteredRows).filter((row) => row.isCorrect.toUpperCase() === 'FALSE').length;
   }
 
   get phaseOptions(): string[] {
@@ -238,7 +246,8 @@ export class AdminDashboardComponent {
   }
 
   get phaseBreakdown(): BreakdownItem[] {
-    return this.buildBreakdown(this.filteredRows.map((row) => ({ label: row.phase, row })));
+    return this.buildBreakdown(this.filteredRows.map((row) => ({ label: row.phase, row })))
+      .sort((a, b) => (b.averageScore ?? -Infinity) - (a.averageScore ?? -Infinity));
   }
 
   get questionTypeBreakdown(): BreakdownItem[] {
@@ -246,7 +255,45 @@ export class AdminDashboardComponent {
   }
 
   get constructoBreakdown(): BreakdownItem[] {
-    return this.buildBreakdown(this.filteredRows.map((row) => ({ label: row.constructo, row }))).slice(0, 12);
+    return this.buildBreakdown(this.filteredRows.map((row) => ({ label: row.constructo, row })))
+      .sort((a, b) => (b.averageScore ?? -Infinity) - (a.averageScore ?? -Infinity))
+      .slice(0, 12);
+  }
+
+  get sdtBreakdown(): DistributionItem[] {
+    const grouped = new Map<string, number>();
+
+    for (const row of this.filteredRows) {
+      const label = row.sdtCategory.trim();
+      if (!label) {
+        continue;
+      }
+      grouped.set(label, (grouped.get(label) ?? 0) + 1);
+    }
+
+    const total = Array.from(grouped.values()).reduce((sum, count) => sum + count, 0);
+
+    return Array.from(grouped.entries())
+      .map(([label, count]) => ({
+        label,
+        count,
+        percent: total > 0 ? (count / total) * 100 : 0,
+      }))
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+  }
+
+  get questionTypeDonutBackground(): string {
+    return this.buildConicGradient(this.questionTypeBreakdown.map((item) => item.percent));
+  }
+
+  get accuracyDonutBackground(): string {
+    const total = this.correctNewsResponses + this.incorrectNewsResponses;
+    if (total === 0) {
+      return 'conic-gradient(rgba(232, 223, 245, 0.12) 0% 100%)';
+    }
+
+    const correctPercent = (this.correctNewsResponses / total) * 100;
+    return `conic-gradient(#2ecc71 0% ${correctPercent}%, #ff6b6b ${correctPercent}% 100%)`;
   }
 
   get participantSummaries(): ParticipantSummary[] {
@@ -266,12 +313,8 @@ export class AdminDashboardComponent {
       .map(([participantId, rows]) => {
         const first = rows[0];
         const scores = this.numericScores(rows);
-        const evaluableRows = rows.filter((row) => {
-          const value = row.isCorrect.toUpperCase();
-          return row.questionType.toUpperCase() === 'NEWS' && (value === 'TRUE' || value === 'FALSE');
-        });
+        const evaluableRows = this.evaluableNewsRows(rows);
         const correct = evaluableRows.filter((row) => row.isCorrect.toUpperCase() === 'TRUE').length;
-        const completionTimeSeconds = this.toNumber(first?.completionTimeSeconds ?? '');
 
         return {
           participantId,
@@ -283,8 +326,7 @@ export class AdminDashboardComponent {
           averageScore: this.average(scores),
           medianScore: this.median(scores),
           accuracyRate: evaluableRows.length > 0 ? (correct / evaluableRows.length) * 100 : null,
-          completionTimeSeconds,
-          completed: completionTimeSeconds !== null && completionTimeSeconds > 0,
+          completionTimeSeconds: this.toNumber(first?.completionTimeSeconds ?? ''),
         };
       })
       .sort((a, b) => {
@@ -297,6 +339,18 @@ export class AdminDashboardComponent {
 
         return a.participantId.localeCompare(b.participantId);
       });
+  }
+
+  chartColor(index: number): string {
+    return this.chartPalette[index % this.chartPalette.length];
+  }
+
+  scorePercent(value: number | null): number {
+    if (value === null || !Number.isFinite(value)) {
+      return 0;
+    }
+
+    return Math.max(0, Math.min(100, value));
   }
 
   formatNumber(value: number | null, decimals = 1): string {
@@ -321,35 +375,109 @@ export class AdminDashboardComponent {
     }
 
     const rounded = Math.max(0, Math.round(seconds));
-    const minutes = Math.floor(rounded / 60);
+    const hours = Math.floor(rounded / 3600);
+    const minutes = Math.floor((rounded % 3600) / 60);
     const remainingSeconds = rounded % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
+    }
 
     return `${minutes}m ${remainingSeconds.toString().padStart(2, '0')}s`;
   }
 
-  private async loadDashboard(blob: Blob): Promise<void> {
+  private fetchDashboardData(username: string, password: string, mode: LoadMode): void {
+    this.adminExportService.fetchCsv(username, password).subscribe({
+      next: (blob) => {
+        void this.loadDashboard(blob, mode, username, password);
+      },
+      error: (err) => {
+        if (mode === 'login') {
+          this.isLoading.set(false);
+        } else {
+          this.isRefreshing.set(false);
+        }
+
+        if (err?.status === 401 || err?.status === 403) {
+          this.errorMessage.set('Credenciales no autorizadas.');
+          return;
+        }
+
+        if (err?.status === 0) {
+          this.errorMessage.set('No se pudo conectar con el servidor. Verifica tu conexión.');
+          return;
+        }
+
+        this.errorMessage.set(
+          mode === 'refresh'
+            ? 'No fue posible actualizar los datos. Se mantienen los datos cargados anteriormente.'
+            : 'No fue posible cargar los datos del dashboard.'
+        );
+      },
+    });
+  }
+
+  private async loadDashboard(blob: Blob, mode: LoadMode, username: string, password: string): Promise<void> {
     try {
       const csv = await blob.text();
       const parsedRows = this.parseCsv(csv);
 
       if (parsedRows.length === 0) {
         this.errorMessage.set('El servidor respondió correctamente, pero el CSV no contiene datos.');
-        this.rows = [];
-        this.isAuthenticated = false;
+
+        if (mode === 'login') {
+          this.rows = [];
+          this.isAuthenticated = false;
+        }
         return;
       }
 
       this.rows = parsedRows;
+      this.lastUpdatedAt = new Date();
       this.isAuthenticated = true;
-      this.password = '';
-      this.clearFilters();
       this.errorMessage.set('');
+
+      if (mode === 'login') {
+        this.authenticatedUsername = username;
+        this.authenticatedPassword = password;
+        this.password = '';
+        this.clearFilters();
+      } else {
+        this.keepOnlyValidFilters();
+        this.refreshMessage.set('Datos actualizados correctamente desde el servidor.');
+      }
     } catch {
-      this.rows = [];
-      this.isAuthenticated = false;
-      this.errorMessage.set('El archivo recibido no pudo ser procesado como CSV.');
+      this.errorMessage.set(
+        mode === 'refresh'
+          ? 'La nueva respuesta no pudo procesarse como CSV. Se mantienen los datos anteriores.'
+          : 'El archivo recibido no pudo ser procesado como CSV.'
+      );
+
+      if (mode === 'login') {
+        this.rows = [];
+        this.isAuthenticated = false;
+      }
     } finally {
-      this.isLoading.set(false);
+      if (mode === 'login') {
+        this.isLoading.set(false);
+      } else {
+        this.isRefreshing.set(false);
+      }
+    }
+  }
+
+  private keepOnlyValidFilters(): void {
+    if (this.selectedPhase && !this.phaseOptions.includes(this.selectedPhase)) {
+      this.selectedPhase = '';
+    }
+    if (this.selectedQuestionType && !this.questionTypeOptions.includes(this.selectedQuestionType)) {
+      this.selectedQuestionType = '';
+    }
+    if (this.selectedConstructo && !this.constructoOptions.includes(this.selectedConstructo)) {
+      this.selectedConstructo = '';
+    }
+    if (this.selectedParticipantId && !this.participantOptions.includes(this.selectedParticipantId)) {
+      this.selectedParticipantId = '';
     }
   }
 
@@ -519,6 +647,13 @@ export class AdminDashboardComponent {
       .filter((value): value is number => value !== null);
   }
 
+  private evaluableNewsRows(rows: DashboardRow[]): DashboardRow[] {
+    return rows.filter((row) => {
+      const value = row.isCorrect.toUpperCase();
+      return row.questionType.toUpperCase() === 'NEWS' && (value === 'TRUE' || value === 'FALSE');
+    });
+  }
+
   private toNumber(value: string): number | null {
     const trimmed = value.trim();
     if (!trimmed) {
@@ -552,11 +687,6 @@ export class AdminDashboardComponent {
     return sorted[middle];
   }
 
-  private isCompleted(row: DashboardRow): boolean {
-    const completionTime = this.toNumber(row.completionTimeSeconds);
-    return completionTime !== null && completionTime > 0;
-  }
-
   private hasResponse(row: DashboardRow): boolean {
     return Boolean(row.answeredAt || row.answerType || row.score);
   }
@@ -578,12 +708,34 @@ export class AdminDashboardComponent {
     const total = Array.from(grouped.values()).reduce((sum, rows) => sum + rows.length, 0);
 
     return Array.from(grouped.entries())
-      .map(([label, rows]) => ({
-        label,
-        count: rows.length,
-        averageScore: this.average(this.numericScores(rows)),
-        percent: total > 0 ? (rows.length / total) * 100 : 0,
-      }))
+      .map(([label, rows]) => {
+        const evaluableRows = this.evaluableNewsRows(rows);
+        const correct = evaluableRows.filter((row) => row.isCorrect.toUpperCase() === 'TRUE').length;
+
+        return {
+          label,
+          count: rows.length,
+          averageScore: this.average(this.numericScores(rows)),
+          accuracyRate: evaluableRows.length > 0 ? (correct / evaluableRows.length) * 100 : null,
+          percent: total > 0 ? (rows.length / total) * 100 : 0,
+        };
+      })
       .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'es'));
+  }
+
+  private buildConicGradient(percentages: number[]): string {
+    if (percentages.length === 0) {
+      return 'conic-gradient(rgba(232, 223, 245, 0.12) 0% 100%)';
+    }
+
+    let cursor = 0;
+    const segments = percentages.map((percent, index) => {
+      const start = cursor;
+      const end = Math.min(100, cursor + percent);
+      cursor = end;
+      return `${this.chartColor(index)} ${start}% ${end}%`;
+    });
+
+    return `conic-gradient(${segments.join(', ')})`;
   }
 }

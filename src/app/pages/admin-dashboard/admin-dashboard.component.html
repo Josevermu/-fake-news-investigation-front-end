@@ -5,10 +5,10 @@
         <p class="eyebrow">ADMIN · ANALYTICS</p>
         <h1>Dashboard del experimento</h1>
         <p class="login-copy">
-          Usa las mismas credenciales del Control Room para cargar y analizar la información consolidada.
+          Usa las mismas credenciales del Control Room para analizar los experimentos completados.
         </p>
 
-        <div class="form-grid login-form">
+        <div class="login-form">
           <div class="form-group">
             <label for="dashboard-username">Usuario</label>
             <input
@@ -51,56 +51,51 @@
         <div>
           <p class="eyebrow">ADMIN · ANALYTICS</p>
           <h1>Dashboard del experimento</h1>
-          <p class="header-copy">Resumen general y análisis interactivo de las respuestas almacenadas.</p>
+          <p class="header-copy">Análisis interactivo de los experimentos completados almacenados en la base de datos.</p>
         </div>
-        <button class="btn-secondary" type="button" (click)="logout()">Cerrar sesión</button>
+
+        <div class="header-actions">
+          <div class="refresh-meta" *ngIf="lastUpdatedAt">
+            <span>Última actualización</span>
+            <strong>{{ lastUpdatedAt | date:'dd/MM/yyyy HH:mm:ss' }}</strong>
+          </div>
+          <button class="btn-refresh" type="button" (click)="refreshData()" [disabled]="isRefreshing()">
+            <span class="refresh-icon" [class.spinning]="isRefreshing()">↻</span>
+            {{ isRefreshing() ? 'Actualizando...' : 'Actualizar datos' }}
+          </button>
+          <button class="btn-secondary" type="button" (click)="logout()" [disabled]="isRefreshing()">
+            Cerrar sesión
+          </button>
+        </div>
       </header>
 
-      <section class="section-block">
-        <div class="section-heading">
-          <div>
-            <p class="section-kicker">Visión general</p>
-            <h2>Estado de participación</h2>
-          </div>
-          <span class="data-badge">{{ rows.length }} filas cargadas</span>
-        </div>
+      <p class="dashboard-message error" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+      <p class="dashboard-message success" *ngIf="refreshMessage()">{{ refreshMessage() }}</p>
 
-        <div class="kpi-grid">
-          <article class="kpi-card">
-            <span class="kpi-label">Registrados</span>
-            <strong>{{ totalRegistered }}</strong>
-            <small>Participantes únicos</small>
-          </article>
-          <article class="kpi-card">
-            <span class="kpi-label">Completaron</span>
-            <strong>{{ totalCompleted }}</strong>
-            <small>Con tiempo de finalización</small>
-          </article>
-          <article class="kpi-card">
-            <span class="kpi-label">Pendientes</span>
-            <strong>{{ totalPending }}</strong>
-            <small>Registrados sin completar</small>
-          </article>
-          <article class="kpi-card">
-            <span class="kpi-label">Tasa de finalización</span>
-            <strong>{{ completionRate | number:'1.1-1' }}%</strong>
-            <small>Completados / registrados</small>
-          </article>
+      <section class="source-note">
+        <div class="source-note-icon">i</div>
+        <div>
+          <strong>Alcance actual del dataset</strong>
+          <p>
+            El endpoint administrativo exporta únicamente participantes que ya completaron el experimento.
+            Por eso este dashboard no calcula registrados pendientes ni tasa de finalización.
+          </p>
         </div>
+        <span class="data-badge">{{ rows.length }} filas cargadas</span>
       </section>
 
-      <section class="section-block filter-panel">
-        <div class="section-heading compact">
+      <section class="filter-panel">
+        <div class="filter-title">
           <div>
-            <p class="section-kicker">Filtros</p>
-            <h2>Segmenta el análisis</h2>
+            <p class="section-kicker">Slicers</p>
+            <h2>Filtros</h2>
           </div>
           <button class="link-button" type="button" (click)="clearFilters()">Limpiar filtros</button>
         </div>
 
         <div class="filters-grid">
           <div class="form-group">
-            <label for="phase-filter">Fase del experimento</label>
+            <label for="phase-filter">Fase</label>
             <select id="phase-filter" [(ngModel)]="selectedPhase">
               <option value="">Todas</option>
               <option *ngFor="let phase of phaseOptions" [value]="phase">{{ phase }}</option>
@@ -135,117 +130,197 @@
         </div>
       </section>
 
-      <section class="section-block">
-        <div class="section-heading">
-          <div>
-            <p class="section-kicker">Selección actual</p>
-            <h2>Estadísticos</h2>
-          </div>
-          <span class="data-badge">{{ filteredRows.length }} filas visibles</span>
-        </div>
-
-        <div class="kpi-grid analysis-grid">
-          <article class="kpi-card accent-card">
-            <span class="kpi-label">Participantes</span>
-            <strong>{{ filteredParticipantCount }}</strong>
-            <small>En la selección</small>
-          </article>
-          <article class="kpi-card">
-            <span class="kpi-label">Respuestas</span>
-            <strong>{{ responseCount }}</strong>
-            <small>Con respuesta/score</small>
-          </article>
-          <article class="kpi-card">
-            <span class="kpi-label">Media</span>
-            <strong>{{ formatNumber(averageScore) }}</strong>
-            <small>Score promedio</small>
-          </article>
-          <article class="kpi-card">
-            <span class="kpi-label">Mediana</span>
-            <strong>{{ formatNumber(medianScore) }}</strong>
-            <small>Score central</small>
-          </article>
-          <article class="kpi-card">
-            <span class="kpi-label">Desviación estándar</span>
-            <strong>{{ formatNumber(standardDeviation) }}</strong>
-            <small>Dispersión del score</small>
-          </article>
-          <article class="kpi-card">
-            <span class="kpi-label">Exactitud</span>
-            <strong>{{ formatPercent(accuracyRate) }}</strong>
-            <small>Solo preguntas NEWS evaluables</small>
-          </article>
-          <article class="kpi-card">
-            <span class="kpi-label">Tiempo promedio</span>
-            <strong>{{ formatDuration(averageCompletionTimeSeconds) }}</strong>
-            <small>Finalización del experimento</small>
-          </article>
-        </div>
+      <section class="kpi-grid">
+        <article class="kpi-card primary-kpi">
+          <span class="kpi-label">Participantes completados</span>
+          <strong>{{ completedParticipantCount }}</strong>
+          <small>Participantes únicos en la selección</small>
+        </article>
+        <article class="kpi-card">
+          <span class="kpi-label">Respuestas</span>
+          <strong>{{ responseCount }}</strong>
+          <small>Respuestas visibles</small>
+        </article>
+        <article class="kpi-card">
+          <span class="kpi-label">Media</span>
+          <strong>{{ formatNumber(averageScore) }}</strong>
+          <small>Score promedio</small>
+        </article>
+        <article class="kpi-card">
+          <span class="kpi-label">Exactitud</span>
+          <strong>{{ formatPercent(accuracyRate) }}</strong>
+          <small>NEWS con isCorrect evaluable</small>
+        </article>
+        <article class="kpi-card">
+          <span class="kpi-label">Tiempo promedio</span>
+          <strong>{{ formatDuration(averageCompletionTimeSeconds) }}</strong>
+          <small>Duración del experimento</small>
+        </article>
+        <article class="kpi-card">
+          <span class="kpi-label">Desviación estándar</span>
+          <strong>{{ formatNumber(standardDeviation) }}</strong>
+          <small>Dispersión del score</small>
+        </article>
       </section>
 
       <section class="visual-grid">
-        <article class="chart-card">
-          <div class="chart-header">
+        <article class="visual-card donut-card">
+          <div class="visual-header">
             <div>
-              <p class="section-kicker">Distribución</p>
-              <h3>Por fase</h3>
+              <p class="section-kicker">Rendimiento</p>
+              <h3>Exactitud en noticias</h3>
             </div>
           </div>
-          <div class="bar-list" *ngIf="phaseBreakdown.length; else noPhaseData">
-            <div class="bar-row" *ngFor="let item of phaseBreakdown">
-              <div class="bar-meta">
-                <span>{{ item.label }}</span>
-                <strong>{{ item.count }}</strong>
+
+          <div class="donut-layout">
+            <div class="donut" [style.background]="accuracyDonutBackground">
+              <div class="donut-hole">
+                <strong>{{ formatPercent(accuracyRate) }}</strong>
+                <span>exactitud</span>
               </div>
-              <div class="bar-track"><span [style.width.%]="item.percent"></span></div>
-              <small>Media: {{ formatNumber(item.averageScore) }}</small>
+            </div>
+            <div class="legend-list">
+              <div class="legend-row">
+                <span class="legend-dot correct-dot"></span>
+                <span>Correctas</span>
+                <strong>{{ correctNewsResponses }}</strong>
+              </div>
+              <div class="legend-row">
+                <span class="legend-dot incorrect-dot"></span>
+                <span>Incorrectas</span>
+                <strong>{{ incorrectNewsResponses }}</strong>
+              </div>
             </div>
           </div>
-          <ng-template #noPhaseData><p class="empty-state">No hay valores de fase para esta selección.</p></ng-template>
         </article>
 
-        <article class="chart-card">
-          <div class="chart-header">
+        <article class="visual-card donut-card">
+          <div class="visual-header">
             <div>
               <p class="section-kicker">Distribución</p>
-              <h3>Por tipo de pregunta</h3>
+              <h3>Tipo de pregunta</h3>
             </div>
           </div>
-          <div class="bar-list" *ngIf="questionTypeBreakdown.length; else noTypeData">
-            <div class="bar-row" *ngFor="let item of questionTypeBreakdown">
-              <div class="bar-meta">
+
+          <div class="donut-layout" *ngIf="questionTypeBreakdown.length; else noQuestionTypeData">
+            <div class="donut" [style.background]="questionTypeDonutBackground">
+              <div class="donut-hole">
+                <strong>{{ responseCount }}</strong>
+                <span>respuestas</span>
+              </div>
+            </div>
+            <div class="legend-list">
+              <div class="legend-row" *ngFor="let item of questionTypeBreakdown; let i = index">
+                <span class="legend-dot" [style.background]="chartColor(i)"></span>
                 <span>{{ item.label }}</span>
                 <strong>{{ item.count }}</strong>
               </div>
-              <div class="bar-track"><span [style.width.%]="item.percent"></span></div>
-              <small>Media: {{ formatNumber(item.averageScore) }}</small>
             </div>
           </div>
-          <ng-template #noTypeData><p class="empty-state">No hay tipos de pregunta para esta selección.</p></ng-template>
+          <ng-template #noQuestionTypeData><p class="empty-state">Sin datos para la selección actual.</p></ng-template>
         </article>
 
-        <article class="chart-card wide-card">
-          <div class="chart-header">
+        <article class="visual-card phase-card">
+          <div class="visual-header">
             <div>
-              <p class="section-kicker">Distribución</p>
-              <h3>Constructos principales</h3>
+              <p class="section-kicker">Comparación</p>
+              <h3>Media por fase</h3>
             </div>
+            <span class="visual-subtitle">Escala 0–100</span>
           </div>
-          <div class="bar-list two-column-bars" *ngIf="constructoBreakdown.length; else noConstructData">
-            <div class="bar-row" *ngFor="let item of constructoBreakdown">
-              <div class="bar-meta">
-                <span>{{ item.label }}</span>
-                <strong>{{ item.count }}</strong>
+
+          <div class="column-chart" *ngIf="phaseBreakdown.length; else noPhaseData">
+            <div class="column-item" *ngFor="let item of phaseBreakdown; let i = index">
+              <div class="column-value">{{ formatNumber(item.averageScore) }}</div>
+              <div class="column-track">
+                <div
+                  class="column-bar"
+                  [style.height.%]="scorePercent(item.averageScore)"
+                  [style.background]="chartColor(i)"
+                ></div>
               </div>
-              <div class="bar-track"><span [style.width.%]="item.percent"></span></div>
-              <small>Media: {{ formatNumber(item.averageScore) }}</small>
+              <div class="column-label" [title]="item.label">{{ item.label }}</div>
+              <small *ngIf="item.accuracyRate !== null">{{ formatPercent(item.accuracyRate) }} acc.</small>
             </div>
           </div>
-          <ng-template #noConstructData><p class="empty-state">No hay constructos para esta selección.</p></ng-template>
+          <ng-template #noPhaseData><p class="empty-state">Sin datos de fase para la selección actual.</p></ng-template>
+        </article>
+
+        <article class="visual-card construct-card">
+          <div class="visual-header">
+            <div>
+              <p class="section-kicker">Ranking</p>
+              <h3>Media por constructo</h3>
+            </div>
+            <span class="visual-subtitle">Top 12</span>
+          </div>
+
+          <div class="horizontal-chart" *ngIf="constructoBreakdown.length; else noConstructData">
+            <div class="horizontal-row" *ngFor="let item of constructoBreakdown; let i = index">
+              <div class="horizontal-label" [title]="item.label">{{ item.label }}</div>
+              <div class="horizontal-track">
+                <span
+                  [style.width.%]="scorePercent(item.averageScore)"
+                  [style.background]="chartColor(i)"
+                ></span>
+              </div>
+              <strong>{{ formatNumber(item.averageScore) }}</strong>
+            </div>
+          </div>
+          <ng-template #noConstructData><p class="empty-state">Sin datos de constructo para la selección actual.</p></ng-template>
+        </article>
+
+        <article class="visual-card sdt-card">
+          <div class="visual-header">
+            <div>
+              <p class="section-kicker">Signal Detection Theory</p>
+              <h3>Distribución SDT</h3>
+            </div>
+          </div>
+
+          <ng-container *ngIf="sdtBreakdown.length; else noSdtData">
+            <div class="stacked-bar">
+              <span
+                *ngFor="let item of sdtBreakdown; let i = index"
+                [style.width.%]="item.percent"
+                [style.background]="chartColor(i)"
+                [title]="item.label + ': ' + item.count"
+              ></span>
+            </div>
+            <div class="sdt-legend">
+              <div class="sdt-legend-item" *ngFor="let item of sdtBreakdown; let i = index">
+                <span class="legend-dot" [style.background]="chartColor(i)"></span>
+                <div>
+                  <strong>{{ item.label }}</strong>
+                  <small>{{ item.count }} · {{ item.percent | number:'1.1-1' }}%</small>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+          <ng-template #noSdtData><p class="empty-state">No hay categorías SDT para los filtros actuales.</p></ng-template>
         </article>
       </section>
 
-      <section class="section-block">
+      <section class="stats-strip">
+        <div>
+          <span>Mediana</span>
+          <strong>{{ formatNumber(medianScore) }}</strong>
+        </div>
+        <div>
+          <span>Filas visibles</span>
+          <strong>{{ filteredRows.length }}</strong>
+        </div>
+        <div>
+          <span>News correctas</span>
+          <strong>{{ correctNewsResponses }}</strong>
+        </div>
+        <div>
+          <span>News incorrectas</span>
+          <strong>{{ incorrectNewsResponses }}</strong>
+        </div>
+      </section>
+
+      <section class="table-section">
         <div class="section-heading">
           <div>
             <p class="section-kicker">Detalle</p>
@@ -263,7 +338,6 @@
                 <th>Grupo</th>
                 <th>Formato</th>
                 <th>News set</th>
-                <th>Estado</th>
                 <th>Respuestas</th>
                 <th>Media</th>
                 <th>Mediana</th>
@@ -278,11 +352,6 @@
                 <td>{{ participant.group || '—' }}</td>
                 <td>{{ participant.format || '—' }}</td>
                 <td>{{ participant.newsSet || '—' }}</td>
-                <td>
-                  <span class="status-pill" [class.completed]="participant.completed">
-                    {{ participant.completed ? 'Completado' : 'Pendiente' }}
-                  </span>
-                </td>
                 <td>{{ participant.responses }}</td>
                 <td>{{ formatNumber(participant.averageScore) }}</td>
                 <td>{{ formatNumber(participant.medianScore) }}</td>
