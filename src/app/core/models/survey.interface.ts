@@ -137,6 +137,17 @@ export interface BatchAnswerResponse {
   savedCount: number;
 }
 
+/** POST /api/v1/participants/{id}/reward */
+export interface RewardSelectionRequest {
+  rewardId: number;
+}
+
+export interface RewardSelectionResponse {
+  participantId: number;
+  rewardId: number;
+  message: string;
+}
+
 /** Error response from backend */
 export interface ErrorResponse {
   status: number;
@@ -146,7 +157,7 @@ export interface ErrorResponse {
   timestamp: string;
 }
 
-/** A symbolic reward option (frontend-only, not backed by API). */
+/** Reward option displayed by the frontend. */
 export interface Reward {
   id: number;
   emoji: string;

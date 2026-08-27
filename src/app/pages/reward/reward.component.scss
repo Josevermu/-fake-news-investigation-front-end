@@ -124,6 +124,36 @@
   }
 }
 
+.reward-card.disabled {
+  cursor: default;
+
+  &:not(.selected) {
+    opacity: 0.6;
+  }
+
+  &:hover {
+    transform: none;
+  }
+}
+
+.reward-saving {
+  margin-top: 12px;
+  color: $accent-gold;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.error-message {
+  margin-top: 2rem;
+  padding: 12px 24px;
+  border: 1px solid #ff6b6b;
+  border-radius: $border-radius-button;
+  background: rgba(255, 107, 107, 0.1);
+  color: #ff8585;
+  font-size: 18px;
+  font-weight: 600;
+}
+
 // === Mobile optimizations ===
 @media (max-width: 768px) {
   .screen {

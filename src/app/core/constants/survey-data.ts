@@ -39,9 +39,9 @@ export const PRE_SURVEY_SCALE: number[] = Array.from({ length: 21 }, (_, i) => i
 export const PRE_SURVEY_GROUP_SIZE = 3;
 
 /**
- * Symbolic rewards shown after completing the survey.
- * Sorted from least favorable to most favorable (left to right).
- * These are frontend-only — the backend has no reward endpoint.
+ * Reward options shown after completing the survey.
+ * The selected reward is persisted through
+ * POST /participants/{id}/reward.
  */
 export const DEFAULT_REWARDS: Reward[] = [
   { id: 1, emoji: '📚', title: 'Me encanta formarme', description: 'Ebook relacionado con la detección de información' },

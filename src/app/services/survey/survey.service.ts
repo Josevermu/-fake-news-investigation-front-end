@@ -14,6 +14,8 @@ import {
   Reward,
   QuestionType,
   AnswerType,
+  RewardSelectionRequest,
+  RewardSelectionResponse,
 } from '@models/survey.interface';
 import { DEFAULT_REWARDS, buildMockSession } from '@constants/survey-data';
 
@@ -223,6 +225,29 @@ get questions(): QuestionSession[] {
       })
     );
   }
+
+  /**
+ * Step 3: Save the reward selected by the participant.
+ * The participant must have completed the experiment first.
+ */
+selectReward(rewardId: number): Observable<RewardSelectionResponse> {
+  const id = this.participantId;
+
+  if (!id) {
+    return throwError(
+      () => new Error('No active participant session.')
+    );
+  }
+
+  const payload: RewardSelectionRequest = {
+    rewardId,
+  };
+
+  return this.http.post<RewardSelectionResponse>(
+    API_ROUTES.participants.selectReward(id),
+    payload
+  );
+}
 
   /**
    * Reset survey state for a new session.

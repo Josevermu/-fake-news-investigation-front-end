@@ -6,5 +6,6 @@ export const API_ROUTES = {
     register: '/participants/register',
     getById: (id: number) => `/participants/${id}`,
     submitBatch: (id: number) => `/participants/${id}/answers/batch`,
+    selectReward: (id: number) => `/participants/${id}/reward`,
   },
 } as const;
