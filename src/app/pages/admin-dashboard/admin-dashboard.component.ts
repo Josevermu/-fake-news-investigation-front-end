@@ -49,6 +49,35 @@ interface DistributionItem {
   percent: number;
 }
 
+interface SdtMetrics {
+  group: string;
+  phase: 'DETECCION' | 'MEMORIA';
+  participantCount: number;
+
+  hit: number;              // A
+  falseAlarm: number;       // B
+  miss: number;             // C
+  correctResponse: number;  // D
+  unsure: number;
+
+  hitRate: number | null;
+  falseAlarmRate: number | null;
+  missRate: number | null;
+  correctResponseRate: number | null;
+
+  dPrime: number | null;
+  criterionC: number | null;
+}
+
+interface ProfileConstructSexStat {
+  sex: string;
+  constructo: string;
+  n: number;
+  mean: number | null;
+  standardDeviation: number | null;
+  standardError: number | null;
+}
+
 interface ParticipantSummary {
   participantId: string;
   alias: string;
@@ -92,6 +121,7 @@ export class AdminDashboardComponent {
   selectedPhase = '';
   selectedQuestionType = '';
   selectedConstructo = '';
+  selectedSex = '';
   selectedFormat = '';
   selectedNewsSet = '';
   selectedParticipantId = '';
@@ -150,6 +180,7 @@ export class AdminDashboardComponent {
     this.selectedFormat = '';
     this.selectedNewsSet = '';
     this.selectedParticipantId = '';
+    this.selectedSex = '';
   }
 
   get filteredRows(): DashboardRow[] {
@@ -158,12 +189,17 @@ export class AdminDashboardComponent {
         (!this.selectedPhase || row.phase === this.selectedPhase) &&
         (!this.selectedQuestionType || row.questionType === this.selectedQuestionType) &&
         (!this.selectedConstructo || row.constructo === this.selectedConstructo) &&
+        (!this.selectedSex || row.sex === this.selectedSex) &&
         (!this.selectedFormat || row.presentationFormat === this.selectedFormat) &&
         (!this.selectedNewsSet || row.newsSet === this.selectedNewsSet) &&
         (!this.selectedParticipantId || row.participantId === this.selectedParticipantId)
       );
     });
   }
+
+  get sexOptions(): string[] {
+  return this.uniqueValues(this.rows.map((row) => row.sex));
+}
 
   /**
    * The current backend export contains completed experiments only.
@@ -178,28 +214,35 @@ export class AdminDashboardComponent {
     return this.filteredRows.filter((row) => this.hasResponse(row)).length;
   }
 
-  get averageScore(): number | null {
-    return this.average(this.numericScores(this.filteredRows));
-  }
+get averageScore(): number | null {
+  return this.average(
+    this.numericScores(
+      this.filteredRows.filter(
+        (row) => row.questionType.trim().toUpperCase() === 'PROFILE'
+      )
+    )
+  );
+}
 
-  get medianScore(): number | null {
-    return this.median(this.numericScores(this.filteredRows));
-  }
+get medianScore(): number | null {
+  return this.median(
+    this.numericScores(
+      this.filteredRows.filter(
+        (row) => row.questionType.trim().toUpperCase() === 'PROFILE'
+      )
+    )
+  );
+}
 
-  get standardDeviation(): number | null {
-    const values = this.numericScores(this.filteredRows);
-    if (values.length === 0) {
-      return null;
-    }
-
-    const mean = this.average(values);
-    if (mean === null) {
-      return null;
-    }
-
-    const variance = values.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / values.length;
-    return Math.sqrt(variance);
-  }
+get standardDeviation(): number | null {
+  return this.sampleStandardDeviation(
+    this.numericScores(
+      this.filteredRows.filter(
+        (row) => row.questionType.trim().toUpperCase() === 'PROFILE'
+      )
+    )
+  );
+}
 
   get averageCompletionTimeSeconds(): number | null {
     const values = this.uniqueParticipants(this.filteredRows)
@@ -281,15 +324,21 @@ export class AdminDashboardComponent {
       .slice(0, 12);
   }
 
+  /**
+   * Legacy stacked SDT visual in the current HTML is labelled as MEMORIA,
+   * therefore it must not aggregate DETECCION and MEMORIA together.
+   */
   get sdtBreakdown(): DistributionItem[] {
     const grouped = new Map<string, number>();
+    const memoryRows = this.getNewsRowsForPhase(this.filteredRows, 'MEMORIA');
 
-    for (const row of this.filteredRows) {
-      const label = row.sdtCategory.trim();
-      if (!label) {
+    for (const row of memoryRows) {
+      const normalized = this.normalizeSdtCategory(row.sdtCategory);
+      if (!normalized) {
         continue;
       }
-      grouped.set(label, (grouped.get(label) ?? 0) + 1);
+
+      grouped.set(normalized, (grouped.get(normalized) ?? 0) + 1);
     }
 
     const total = Array.from(grouped.values()).reduce((sum, count) => sum + count, 0);
@@ -303,6 +352,264 @@ export class AdminDashboardComponent {
       .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
   }
 
+  get sexDistribution(): DistributionItem[] {
+  const participants = this.uniqueParticipants(this.filteredRows);
+  const grouped = new Map<string, number>();
+
+  for (const participant of participants) {
+    const sex = participant.sex.trim() || 'SIN_DATO';
+    grouped.set(sex, (grouped.get(sex) ?? 0) + 1);
+  }
+
+  const total = participants.length;
+
+  return Array.from(grouped.entries())
+    .map(([label, count]) => ({
+      label,
+      count,
+      percent: total > 0 ? (count / total) * 100 : 0,
+    }))
+    .sort((a, b) => b.count - a.count);
+}
+
+get profileConstructBySex(): ProfileConstructSexStat[] {
+  const participantConstructs = new Map<
+    string,
+    {
+      sex: string;
+      constructo: string;
+      scores: number[];
+    }
+  >();
+
+  const profileRows = this.filteredRows.filter(
+    (row) =>
+      row.questionType.trim().toUpperCase() === 'PROFILE' &&
+      row.participantId &&
+      row.constructo
+  );
+
+  // Step 1:
+  // Construct mean for EACH participant.
+  for (const row of profileRows) {
+    const score = this.toNumber(row.score);
+
+    if (score === null || score < 0 || score > 100) {
+      continue;
+    }
+
+    const sex = row.sex.trim() || 'SIN_DATO';
+    const constructo = row.constructo.trim();
+
+    const key = `${row.participantId}::${sex}::${constructo}`;
+
+    const current = participantConstructs.get(key) ?? {
+      sex,
+      constructo,
+      scores: [],
+    };
+
+    current.scores.push(score);
+    participantConstructs.set(key, current);
+  }
+
+  // Step 2:
+  // Group those participant means by Sex + Construct.
+  const grouped = new Map<
+    string,
+    {
+      sex: string;
+      constructo: string;
+      values: number[];
+    }
+  >();
+
+  for (const participant of participantConstructs.values()) {
+    const participantMean = this.average(participant.scores);
+
+    if (participantMean === null) {
+      continue;
+    }
+
+    const key = `${participant.sex}::${participant.constructo}`;
+
+    const current = grouped.get(key) ?? {
+      sex: participant.sex,
+      constructo: participant.constructo,
+      values: [],
+    };
+
+    current.values.push(participantMean);
+    grouped.set(key, current);
+  }
+
+  return Array.from(grouped.values())
+    .map((group) => {
+      const sd = this.sampleStandardDeviation(group.values);
+
+      return {
+        sex: group.sex,
+        constructo: group.constructo,
+        n: group.values.length,
+        mean: this.average(group.values),
+        standardDeviation: sd,
+        standardError:
+          sd !== null && group.values.length > 0
+            ? sd / Math.sqrt(group.values.length)
+            : null,
+      };
+    })
+    .sort(
+      (a, b) =>
+        a.constructo.localeCompare(b.constructo, 'es') ||
+        a.sex.localeCompare(b.sex, 'es')
+    );
+}
+
+get detectionScaleDistribution(): DistributionItem[] {
+  return this.buildScaleDistribution(
+    this.getNewsRowsForPhase(
+      this.filteredRows,
+      'DETECCION'
+    ),
+    'DETECCION'
+  );
+}
+
+get memoryScaleDistribution(): DistributionItem[] {
+  return this.buildScaleDistribution(
+    this.getNewsRowsForPhase(
+      this.filteredRows,
+      'MEMORIA'
+    ),
+    'MEMORIA'
+  );
+}
+
+private buildScaleDistribution(
+  rows: DashboardRow[],
+  phase: 'DETECCION' | 'MEMORIA'
+): DistributionItem[] {
+  const labels =
+    phase === 'DETECCION'
+      ? [
+          'Totalmente falsa',
+          'Bastante falsa',
+          'Poco falsa',
+          'Incertidumbre',
+          'Poco verdadera',
+          'Bastante verdadera',
+          'Totalmente verdadera',
+        ]
+      : [
+          'Totalmente vieja',
+          'Bastante vieja',
+          'Poco vieja',
+          'Incertidumbre',
+          'Poco nueva',
+          'Bastante nueva',
+          'Totalmente nueva',
+        ];
+
+  const counts = new Map<string, number>(
+    labels.map((label) => [label, 0])
+  );
+
+  for (const row of rows) {
+    const score = this.toNumber(row.score);
+
+    if (
+      score === null ||
+      score < -10 ||
+      score > 10
+    ) {
+      continue;
+    }
+
+    const label =
+      this.getScaleLabel(score, phase);
+
+    if (label) {
+      counts.set(
+        label,
+        (counts.get(label) ?? 0) + 1
+      );
+    }
+  }
+
+  const total = Array.from(counts.values())
+    .reduce((sum, count) => sum + count, 0);
+
+  return labels.map((label) => {
+    const count = counts.get(label) ?? 0;
+
+    return {
+      label,
+      count,
+      percent:
+        total > 0
+          ? (count / total) * 100
+          : 0,
+    };
+  });
+}
+
+private getScaleLabel(
+  score: number,
+  phase: 'DETECCION' | 'MEMORIA'
+): string | null {
+  const detection = phase === 'DETECCION';
+
+  if (score <= -9) {
+    return detection
+      ? 'Totalmente falsa'
+      : 'Totalmente vieja';
+  }
+
+  if (score <= -5) {
+    return detection
+      ? 'Bastante falsa'
+      : 'Bastante vieja';
+  }
+
+  if (score <= -1) {
+    return detection
+      ? 'Poco falsa'
+      : 'Poco vieja';
+  }
+
+  if (score === 0) {
+    return 'Incertidumbre';
+  }
+
+  if (score <= 4) {
+    return detection
+      ? 'Poco verdadera'
+      : 'Poco nueva';
+  }
+
+  if (score <= 8) {
+    return detection
+      ? 'Bastante verdadera'
+      : 'Bastante nueva';
+  }
+
+  if (score <= 10) {
+    return detection
+      ? 'Totalmente verdadera'
+      : 'Totalmente nueva';
+  }
+
+  return null;
+}
+
+formatRate(value: number | null): string {
+  if (value === null || !Number.isFinite(value)) {
+    return '—';
+  }
+
+  return `${(value * 100).toFixed(1)}%`;
+}
   get accuracyDonutBackground(): string {
     const total = this.correctNewsResponses + this.incorrectNewsResponses;
     if (total === 0) {
@@ -329,7 +636,12 @@ export class AdminDashboardComponent {
     return Array.from(grouped.entries())
       .map(([participantId, rows]) => {
         const first = rows[0];
-        const scores = this.numericScores(rows);
+        const scores = this.numericScores(
+          rows.filter(
+            (row) =>
+              row.questionType.trim().toUpperCase() === 'PROFILE'
+          )
+        );
         const evaluableRows = this.evaluableNewsRows(rows);
         const correct = evaluableRows.filter((row) => row.isCorrect.toUpperCase() === 'TRUE').length;
 
@@ -434,6 +746,347 @@ export class AdminDashboardComponent {
     });
   }
 
+  get sdtByPhase(): SdtMetrics[] {
+    return (['DETECCION', 'MEMORIA'] as const)
+      .map((phase) => this.calculateSdtMetrics(this.filteredRows, phase, 'TOTAL'))
+      .filter((item) => this.hasSdtData(item));
+  }
+
+  get sdtBySex(): SdtMetrics[] {
+    const sexes = this.uniqueValues(this.filteredRows.map((row) => row.sex));
+    const results: SdtMetrics[] = [];
+
+    for (const sex of sexes) {
+      const sexRows = this.filteredRows.filter((row) => row.sex === sex);
+
+      for (const phase of ['DETECCION', 'MEMORIA'] as const) {
+        const metrics = this.calculateSdtMetrics(sexRows, phase, sex);
+
+        if (this.hasSdtData(metrics)) {
+          results.push(metrics);
+        }
+      }
+    }
+
+    return results;
+  }
+
+  get sdtDashboardRows(): SdtMetrics[] {
+    return [...this.sdtByPhase, ...this.sdtBySex];
+  }
+
+  private calculateSdtMetrics(
+  rows: DashboardRow[],
+  phase: 'DETECCION' | 'MEMORIA',
+  group: string
+): SdtMetrics {
+  const phaseRows = this.getNewsRowsForPhase(rows, phase);
+
+  let hit = 0;
+  let falseAlarm = 0;
+  let miss = 0;
+  let correctResponse = 0;
+  let unsure = 0;
+
+  for (const row of phaseRows) {
+    const category = this.normalizeSdtCategory(row.sdtCategory);
+
+    switch (category) {
+      case 'HIT':
+        hit += 1;
+        break;
+
+      case 'FALSE_ALARM':
+        falseAlarm += 1;
+        break;
+
+      case 'MISS':
+        miss += 1;
+        break;
+
+      case 'CORRECT_RESPONSE':
+        correctResponse += 1;
+        break;
+
+      case 'UNSURE':
+        unsure += 1;
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  const signalN = hit + miss;
+  const noiseN = falseAlarm + correctResponse;
+
+  const hitRate =
+    signalN > 0
+      ? hit / signalN
+      : null;
+
+  const falseAlarmRate =
+    noiseN > 0
+      ? falseAlarm / noiseN
+      : null;
+
+  const missRate =
+    signalN > 0
+      ? miss / signalN
+      : null;
+
+  const correctResponseRate =
+    noiseN > 0
+      ? correctResponse / noiseN
+      : null;
+
+  let dPrime: number | null = null;
+  let criterionC: number | null = null;
+
+  if (
+    hitRate !== null &&
+    falseAlarmRate !== null
+  ) {
+    const correctedHitRate =
+      this.correctExtremeRate(hitRate, signalN);
+
+    const correctedFalseAlarmRate =
+      this.correctExtremeRate(falseAlarmRate, noiseN);
+
+    const zHit =
+      this.inverseNormalCdf(correctedHitRate);
+
+    const zFalseAlarm =
+      this.inverseNormalCdf(correctedFalseAlarmRate);
+
+    dPrime = zHit - zFalseAlarm;
+
+    criterionC =
+      -(zHit + zFalseAlarm) / 2;
+  }
+
+  return {
+    group,
+    phase,
+    participantCount:
+      this.uniqueParticipants(phaseRows).length,
+
+    hit,
+    falseAlarm,
+    miss,
+    correctResponse,
+    unsure,
+
+    hitRate,
+    falseAlarmRate,
+    missRate,
+    correctResponseRate,
+
+    dPrime,
+    criterionC,
+  };
+}
+
+private hasSdtData(metrics: SdtMetrics): boolean {
+  return (
+    metrics.hit +
+      metrics.falseAlarm +
+      metrics.miss +
+      metrics.correctResponse +
+      metrics.unsure >
+    0
+  );
+}
+
+private getNewsRowsForPhase(
+  rows: DashboardRow[],
+  phase: 'DETECCION' | 'MEMORIA'
+): DashboardRow[] {
+  return rows.filter((row) => {
+    if (
+      row.questionType.trim().toUpperCase() !== 'NEWS'
+    ) {
+      return false;
+    }
+
+    const answerType =
+      row.answerType.trim().toUpperCase();
+
+    const rowPhase =
+      row.phase.trim().toUpperCase();
+
+    if (phase === 'DETECCION') {
+      return (
+        answerType === 'FAKE_DETECTION' ||
+        rowPhase === 'DETECCION'
+      );
+    }
+
+    return (
+      answerType === 'MEMORY_TEST' ||
+      rowPhase === 'MEMORIA'
+    );
+  });
+}
+
+  private sampleStandardDeviation(values: number[]): number | null {
+  if (values.length < 2) {
+    return null;
+  }
+
+  const mean = this.average(values);
+
+  if (mean === null) {
+    return null;
+  }
+
+  const variance =
+    values.reduce(
+      (sum, value) => sum + Math.pow(value - mean, 2),
+      0
+    ) /
+    (values.length - 1);
+
+  return Math.sqrt(variance);
+}
+
+private normalizeSdtCategory(
+  value: string
+):
+  | 'HIT'
+  | 'FALSE_ALARM'
+  | 'MISS'
+  | 'CORRECT_RESPONSE'
+  | 'UNSURE'
+  | null {
+  const normalized = value
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/g, '_');
+
+  if (!normalized) {
+    return null;
+  }
+
+  if (
+    normalized.startsWith('HIT') ||
+    normalized === 'A'
+  ) {
+    return 'HIT';
+  }
+
+  if (
+    normalized.startsWith('FALSE_ALARM') ||
+    normalized === 'B'
+  ) {
+    return 'FALSE_ALARM';
+  }
+
+  if (
+    normalized.startsWith('MISS') ||
+    normalized === 'C'
+  ) {
+    return 'MISS';
+  }
+
+  if (
+    normalized.startsWith('CORRECT_RESPONSE') ||
+    normalized.startsWith('CORRECT_REJECTION') ||
+    normalized === 'D'
+  ) {
+    return 'CORRECT_RESPONSE';
+  }
+
+  if (
+    normalized.startsWith('UNSURE') ||
+    normalized.includes('INCERT')
+  ) {
+    return 'UNSURE';
+  }
+
+  return null;
+}
+
+private correctExtremeRate(
+  rate: number,
+  n: number
+): number {
+  if (n <= 0) {
+    return rate;
+  }
+
+  if (rate === 1) {
+    return 1 - 1 / (2 * n);
+  }
+
+  if (rate === 0) {
+    return 1 / (2 * n);
+  }
+
+  return rate;
+}
+
+private inverseNormalCdf(p: number): number {
+  if (p <= 0 || p >= 1) {
+    return Number.NaN;
+  }
+
+  const a1 = -3.969683028665376e1;
+  const a2 = 2.209460984245205e2;
+  const a3 = -2.759285104469687e2;
+  const a4 = 1.38357751867269e2;
+  const a5 = -3.066479806614716e1;
+  const a6 = 2.506628277459239;
+
+  const b1 = -5.447609879822406e1;
+  const b2 = 1.615858368580409e2;
+  const b3 = -1.556989798598866e2;
+  const b4 = 6.680131188771972e1;
+  const b5 = -1.328068155288572e1;
+
+  const c1 = -7.784894002430293e-3;
+  const c2 = -3.223964580411365e-1;
+  const c3 = -2.400758277161838;
+  const c4 = -2.549732539343734;
+  const c5 = 4.374664141464968;
+  const c6 = 2.938163982698783;
+
+  const d1 = 7.784695709041462e-3;
+  const d2 = 3.224671290700398e-1;
+  const d3 = 2.445134137142996;
+  const d4 = 3.754408661907416;
+
+  const pLow = 0.02425;
+  const pHigh = 1 - pLow;
+
+  if (p < pLow) {
+    const q = Math.sqrt(-2 * Math.log(p));
+
+    return (
+      (((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6) /
+      ((((d1 * q + d2) * q + d3) * q + d4) * q + 1)
+    );
+  }
+
+  if (p > pHigh) {
+    const q = Math.sqrt(-2 * Math.log(1 - p));
+
+    return -(
+      (((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6) /
+      ((((d1 * q + d2) * q + d3) * q + d4) * q + 1)
+    );
+  }
+
+  const q = p - 0.5;
+  const r = q * q;
+
+  return (
+    (((((a1 * r + a2) * r + a3) * r + a4) * r + a5) * r + a6) *
+    q /
+    (((((b1 * r + b2) * r + b3) * r + b4) * r + b5) * r + 1)
+  );
+}
+
   private async loadDashboard(blob: Blob, mode: LoadMode, username: string, password: string): Promise<void> {
     try {
       const csv = await blob.text();
@@ -502,6 +1155,9 @@ export class AdminDashboardComponent {
     if (this.selectedParticipantId && !this.participantOptions.includes(this.selectedParticipantId)) {
       this.selectedParticipantId = '';
     }
+    if (this.selectedSex && !this.sexOptions.includes(this.selectedSex)) {
+  this.selectedSex = '';
+}
   }
 
   private parseCsv(text: string): DashboardRow[] {
@@ -724,6 +1380,28 @@ private correctnessStatus(row: DashboardRow): 'TRUE' | 'FALSE' | null {
     return Boolean(row.answeredAt || row.answerType || row.score);
   }
 
+
+  /**
+   * Avoids mixing PROFILE (0..100) and NEWS (-10..10) in one mean.
+   * If PROFILE rows exist in a grouping, the displayed average is PROFILE-only.
+   * Otherwise it falls back to the NEWS-only mean for phase-specific legacy visuals.
+   */
+  private breakdownAverageScore(rows: DashboardRow[]): number | null {
+    const profileRows = rows.filter(
+      (row) => row.questionType.trim().toUpperCase() === 'PROFILE'
+    );
+
+    if (profileRows.length > 0) {
+      return this.average(this.numericScores(profileRows));
+    }
+
+    const newsRows = rows.filter(
+      (row) => row.questionType.trim().toUpperCase() === 'NEWS'
+    );
+
+    return this.average(this.numericScores(newsRows));
+  }
+
   private buildBreakdown(items: Array<{ label: string; row: DashboardRow }>): BreakdownItem[] {
     const grouped = new Map<string, DashboardRow[]>();
 
@@ -749,7 +1427,7 @@ private correctnessStatus(row: DashboardRow): 'TRUE' | 'FALSE' | null {
           label,
           count: rows.length,
           participantCount: this.uniqueParticipants(rows).length,
-          averageScore: this.average(this.numericScores(rows)),
+          averageScore: this.breakdownAverageScore(rows),
           accuracyRate: evaluableRows.length > 0 ? (correct / evaluableRows.length) * 100 : null,
           percent: total > 0 ? (rows.length / total) * 100 : 0,
         };

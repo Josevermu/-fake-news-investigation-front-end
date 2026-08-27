@@ -38,7 +38,12 @@
 
         <p class="error-text" *ngIf="errorMessage()">{{ errorMessage() }}</p>
 
-        <button class="btn-primary" type="button" (click)="onLogin()" [disabled]="isLoading()">
+        <button
+          class="btn-primary"
+          type="button"
+          (click)="onLogin()"
+          [disabled]="isLoading()"
+        >
           {{ isLoading() ? 'Cargando datos...' : 'Entrar al dashboard' }}
         </button>
       </div>
@@ -51,7 +56,9 @@
         <div>
           <p class="eyebrow">ADMIN · ANALYTICS</p>
           <h1>Dashboard del experimento</h1>
-          <p class="header-copy">Análisis interactivo de los experimentos completados almacenados en la base de datos.</p>
+          <p class="header-copy">
+            Análisis interactivo de los experimentos completados almacenados en la base de datos.
+          </p>
         </div>
 
         <div class="header-actions">
@@ -59,30 +66,46 @@
             <span>Última actualización</span>
             <strong>{{ lastUpdatedAt | date:'dd/MM/yyyy HH:mm:ss' }}</strong>
           </div>
-          <button class="btn-refresh" type="button" (click)="refreshData()" [disabled]="isRefreshing()">
+
+          <button
+            class="btn-refresh"
+            type="button"
+            (click)="refreshData()"
+            [disabled]="isRefreshing()"
+          >
             <span class="refresh-icon" [class.spinning]="isRefreshing()">↻</span>
             {{ isRefreshing() ? 'Actualizando...' : 'Actualizar datos' }}
           </button>
-          <button class="btn-secondary" type="button" (click)="logout()" [disabled]="isRefreshing()">
+
+          <button
+            class="btn-secondary"
+            type="button"
+            (click)="logout()"
+            [disabled]="isRefreshing()"
+          >
             Cerrar sesión
           </button>
         </div>
       </header>
 
-      <p class="dashboard-message error" *ngIf="errorMessage()">{{ errorMessage() }}</p>
-      <p class="dashboard-message success" *ngIf="refreshMessage()">{{ refreshMessage() }}</p>
+      <p class="dashboard-message error" *ngIf="errorMessage()">
+        {{ errorMessage() }}
+      </p>
+      <p class="dashboard-message success" *ngIf="refreshMessage()">
+        {{ refreshMessage() }}
+      </p>
 
       <section class="source-note">
         <div class="source-note-icon">i</div>
         <div>
           <strong>Alcance actual del dataset</strong>
           <p>
-  El endpoint administrativo exporta únicamente participantes que ya completaron el experimento.
-  Por eso este dashboard no calcula registrados pendientes ni tasa de finalización.
-  Las preguntas PROFILE no tienen una respuesta correcta; cualquier valor
-  isCorrect = FALSE almacenado para PROFILE se considera no aplicable y se
-  excluye de todas las métricas de exactitud.
-</p>
+            El endpoint administrativo exporta únicamente participantes que ya completaron el experimento.
+            Por eso este dashboard no calcula registrados pendientes ni tasa de finalización.
+            Las preguntas PROFILE usan escala 0–100 y no tienen respuesta correcta; cualquier
+            isCorrect = FALSE de PROFILE se considera no aplicable. DETECCION y MEMORIA se
+            analizan por separado para los cálculos TDS/SDT.
+          </p>
         </div>
         <span class="data-badge">{{ rows.length }} filas cargadas</span>
       </section>
@@ -93,15 +116,29 @@
             <p class="section-kicker">Slicers</p>
             <h2>Filtros</h2>
           </div>
-          <button class="link-button" type="button" (click)="clearFilters()">Limpiar filtros</button>
+          <button class="link-button" type="button" (click)="clearFilters()">
+            Limpiar filtros
+          </button>
         </div>
 
         <div class="filters-grid">
           <div class="form-group">
+            <label for="sex-filter">Sexo</label>
+            <select id="sex-filter" [(ngModel)]="selectedSex">
+              <option value="">Todos</option>
+              <option *ngFor="let sex of sexOptions" [value]="sex">
+                {{ sex }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
             <label for="phase-filter">Fase</label>
             <select id="phase-filter" [(ngModel)]="selectedPhase">
               <option value="">Todas</option>
-              <option *ngFor="let phase of phaseOptions" [value]="phase">{{ phase }}</option>
+              <option *ngFor="let phase of phaseOptions" [value]="phase">
+                {{ phase }}
+              </option>
             </select>
           </div>
 
@@ -109,7 +146,9 @@
             <label for="type-filter">Tipo de pregunta</label>
             <select id="type-filter" [(ngModel)]="selectedQuestionType">
               <option value="">Todos</option>
-              <option *ngFor="let type of questionTypeOptions" [value]="type">{{ type }}</option>
+              <option *ngFor="let type of questionTypeOptions" [value]="type">
+                {{ type }}
+              </option>
             </select>
           </div>
 
@@ -117,7 +156,9 @@
             <label for="construct-filter">Constructo</label>
             <select id="construct-filter" [(ngModel)]="selectedConstructo">
               <option value="">Todos</option>
-              <option *ngFor="let constructo of constructoOptions" [value]="constructo">{{ constructo }}</option>
+              <option *ngFor="let constructo of constructoOptions" [value]="constructo">
+                {{ constructo }}
+              </option>
             </select>
           </div>
 
@@ -125,7 +166,9 @@
             <label for="format-filter">Formato</label>
             <select id="format-filter" [(ngModel)]="selectedFormat">
               <option value="">Todos</option>
-              <option *ngFor="let format of formatOptions" [value]="format">{{ format }}</option>
+              <option *ngFor="let format of formatOptions" [value]="format">
+                {{ format }}
+              </option>
             </select>
           </div>
 
@@ -133,7 +176,9 @@
             <label for="news-set-filter">News set</label>
             <select id="news-set-filter" [(ngModel)]="selectedNewsSet">
               <option value="">Todos</option>
-              <option *ngFor="let newsSet of newsSetOptions" [value]="newsSet">{{ newsSet }}</option>
+              <option *ngFor="let newsSet of newsSetOptions" [value]="newsSet">
+                {{ newsSet }}
+              </option>
             </select>
           </div>
 
@@ -155,30 +200,35 @@
           <strong>{{ completedParticipantCount }}</strong>
           <small>Participantes únicos en la selección</small>
         </article>
+
         <article class="kpi-card">
           <span class="kpi-label">Respuestas</span>
           <strong>{{ responseCount }}</strong>
           <small>Respuestas visibles</small>
         </article>
+
         <article class="kpi-card">
-          <span class="kpi-label">Media</span>
+          <span class="kpi-label">Media PROFILE</span>
           <strong>{{ formatNumber(averageScore) }}</strong>
-          <small>Score promedio</small>
+          <small>Escala 0–100</small>
         </article>
+
         <article class="kpi-card">
-          <span class="kpi-label">Exactitud</span>
+          <span class="kpi-label">Exactitud NEWS</span>
           <strong>{{ formatPercent(accuracyRate) }}</strong>
-          <small>Solo NEWS · PROFILE no se evalúa</small>
+          <small>PROFILE no se evalúa como correcto/incorrecto</small>
         </article>
+
         <article class="kpi-card">
           <span class="kpi-label">Tiempo promedio</span>
           <strong>{{ formatDuration(averageCompletionTimeSeconds) }}</strong>
           <small>Duración del experimento</small>
         </article>
+
         <article class="kpi-card">
-          <span class="kpi-label">Desviación estándar</span>
+          <span class="kpi-label">DE PROFILE</span>
           <strong>{{ formatNumber(standardDeviation) }}</strong>
-          <small>Dispersión del score</small>
+          <small>Desviación estándar muestral</small>
         </article>
       </section>
 
@@ -198,12 +248,14 @@
                 <span>exactitud</span>
               </div>
             </div>
+
             <div class="legend-list">
               <div class="legend-row">
                 <span class="legend-dot correct-dot"></span>
                 <span>Correctas</span>
                 <strong>{{ correctNewsResponses }}</strong>
               </div>
+
               <div class="legend-row">
                 <span class="legend-dot incorrect-dot"></span>
                 <span>Incorrectas</span>
@@ -213,13 +265,41 @@
           </div>
         </article>
 
+        <article class="visual-card construct-card">
+          <div class="visual-header">
+            <div>
+              <p class="section-kicker">Demografía</p>
+              <h3>Distribución por sexo</h3>
+            </div>
+            <span class="visual-subtitle">Participantes únicos</span>
+          </div>
+
+          <div class="horizontal-chart" *ngIf="sexDistribution.length; else noSexData">
+            <div class="horizontal-row" *ngFor="let item of sexDistribution; let i = index">
+              <div class="horizontal-label" [title]="item.label">
+                {{ item.label }}
+              </div>
+              <div class="horizontal-track">
+                <span
+                  [style.width.%]="item.percent"
+                  [style.background]="chartColor(i)"
+                ></span>
+              </div>
+              <strong>{{ item.percent | number:'1.1-1' }}%</strong>
+            </div>
+          </div>
+          <ng-template #noSexData>
+            <p class="empty-state">Sin datos de sexo para la selección actual.</p>
+          </ng-template>
+        </article>
+
         <article class="visual-card condition-card format-card">
           <div class="visual-header">
             <div>
               <p class="section-kicker">Condición experimental</p>
               <h3>Rendimiento por formato de presentación</h3>
             </div>
-            <span class="visual-subtitle">Score medio · exactitud NEWS</span>
+            <span class="visual-subtitle">Exactitud NEWS</span>
           </div>
 
           <div class="condition-chart" *ngIf="formatBreakdown.length; else noFormatData">
@@ -228,20 +308,28 @@
                 <strong>{{ item.label }}</strong>
                 <small>{{ item.participantCount }} participantes</small>
               </div>
+
               <div class="condition-score">
-                <span>Score</span>
+                <span>{{ selectedQuestionType === 'NEWS' ? 'Media NEWS' : 'Media PROFILE' }}</span>
                 <strong>{{ formatNumber(item.averageScore) }}</strong>
               </div>
+
               <div class="condition-track">
-                <span [style.width.%]="scorePercent(item.averageScore)" [style.background]="chartColor(i)"></span>
+                <span
+                  [style.width.%]="scorePercent(item.accuracyRate)"
+                  [style.background]="chartColor(i)"
+                ></span>
               </div>
+
               <div class="condition-accuracy">
-                <span>Exactitud</span>
+                <span>Exactitud NEWS</span>
                 <strong>{{ formatPercent(item.accuracyRate) }}</strong>
               </div>
             </div>
           </div>
-          <ng-template #noFormatData><p class="empty-state">Sin datos de formato para la selección actual.</p></ng-template>
+          <ng-template #noFormatData>
+            <p class="empty-state">Sin datos de formato para la selección actual.</p>
+          </ng-template>
         </article>
 
         <article class="visual-card condition-card news-set-card">
@@ -250,7 +338,7 @@
               <p class="section-kicker">Material experimental</p>
               <h3>Rendimiento por News set</h3>
             </div>
-            <span class="visual-subtitle">Comparación entre conjuntos asignados</span>
+            <span class="visual-subtitle">Exactitud NEWS</span>
           </div>
 
           <div class="condition-chart" *ngIf="newsSetBreakdown.length; else noNewsSetData">
@@ -259,60 +347,73 @@
                 <strong>{{ item.label }}</strong>
                 <small>{{ item.participantCount }} participantes</small>
               </div>
+
               <div class="condition-score">
-                <span>Score</span>
+                <span>{{ selectedQuestionType === 'NEWS' ? 'Media NEWS' : 'Media PROFILE' }}</span>
                 <strong>{{ formatNumber(item.averageScore) }}</strong>
               </div>
+
               <div class="condition-track">
-                <span [style.width.%]="scorePercent(item.averageScore)" [style.background]="chartColor(i + 2)"></span>
+                <span
+                  [style.width.%]="scorePercent(item.accuracyRate)"
+                  [style.background]="chartColor(i + 2)"
+                ></span>
               </div>
+
               <div class="condition-accuracy">
-                <span>Exactitud</span>
+                <span>Exactitud NEWS</span>
                 <strong>{{ formatPercent(item.accuracyRate) }}</strong>
               </div>
             </div>
           </div>
-          <ng-template #noNewsSetData><p class="empty-state">Sin datos de News set para la selección actual.</p></ng-template>
+          <ng-template #noNewsSetData>
+            <p class="empty-state">Sin datos de News set para la selección actual.</p>
+          </ng-template>
         </article>
 
         <article class="visual-card phase-card">
           <div class="visual-header">
             <div>
               <p class="section-kicker">Secuencia experimental</p>
-              <h3>Rendimiento por fase</h3>
+              <h3>Exactitud por fase</h3>
             </div>
-            <span class="visual-subtitle">Score medio · exactitud NEWS</span>
+            <span class="visual-subtitle">DETECCION vs. MEMORIA</span>
           </div>
 
           <div class="column-chart" *ngIf="phaseBreakdown.length; else noPhaseData">
             <div class="column-item" *ngFor="let item of phaseBreakdown; let i = index">
-              <div class="column-value">{{ formatNumber(item.averageScore) }}</div>
+              <div class="column-value">{{ formatPercent(item.accuracyRate) }}</div>
               <div class="column-track">
                 <div
                   class="column-bar"
-                  [style.height.%]="scorePercent(item.averageScore)"
+                  [style.height.%]="scorePercent(item.accuracyRate)"
                   [style.background]="chartColor(i)"
                 ></div>
               </div>
-              <div class="column-label" [title]="item.label">{{ item.label }}</div>
-              <small *ngIf="item.accuracyRate !== null">{{ formatPercent(item.accuracyRate) }} acc.</small>
+              <div class="column-label" [title]="item.label">
+                {{ item.label }}
+              </div>
+              <small>Media score: {{ formatNumber(item.averageScore) }}</small>
             </div>
           </div>
-          <ng-template #noPhaseData><p class="empty-state">Sin datos de fase para la selección actual.</p></ng-template>
+          <ng-template #noPhaseData>
+            <p class="empty-state">Sin datos de fase para la selección actual.</p>
+          </ng-template>
         </article>
 
         <article class="visual-card construct-card">
           <div class="visual-header">
             <div>
-              <p class="section-kicker">Perfil de respuestas</p>
-              <h3>Score medio por constructo</h3>
+              <p class="section-kicker">PROFILE · escala 0–100</p>
+              <h3>Media por constructo</h3>
             </div>
-            <span class="visual-subtitle">Top 12</span>
           </div>
 
           <div class="horizontal-chart" *ngIf="constructoBreakdown.length; else noConstructData">
             <div class="horizontal-row" *ngFor="let item of constructoBreakdown; let i = index">
-              <div class="horizontal-label" [title]="item.label">{{ item.label }}</div>
+              <div class="horizontal-label" [title]="item.label">
+                {{ item.label }}
+              </div>
               <div class="horizontal-track">
                 <span
                   [style.width.%]="scorePercent(item.averageScore)"
@@ -322,13 +423,15 @@
               <strong>{{ formatNumber(item.averageScore) }}</strong>
             </div>
           </div>
-          <ng-template #noConstructData><p class="empty-state">Sin datos de constructo para la selección actual.</p></ng-template>
+          <ng-template #noConstructData>
+            <p class="empty-state">Sin datos de constructo para la selección actual.</p>
+          </ng-template>
         </article>
 
         <article class="visual-card sdt-card">
           <div class="visual-header">
             <div>
-              <p class="section-kicker">Memoria · Signal Detection Theory</p>
+              <p class="section-kicker">MEMORIA · Signal Detection Theory</p>
               <h3>Patrón de respuestas SDT</h3>
             </div>
           </div>
@@ -342,6 +445,7 @@
                 [title]="item.label + ': ' + item.count"
               ></span>
             </div>
+
             <div class="sdt-legend">
               <div class="sdt-legend-item" *ngFor="let item of sdtBreakdown; let i = index">
                 <span class="legend-dot" [style.background]="chartColor(i)"></span>
@@ -352,13 +456,159 @@
               </div>
             </div>
           </ng-container>
-          <ng-template #noSdtData><p class="empty-state">No hay categorías SDT para los filtros actuales.</p></ng-template>
+          <ng-template #noSdtData>
+            <p class="empty-state">No hay categorías SDT de MEMORIA para los filtros actuales.</p>
+          </ng-template>
         </article>
+
+        <article class="visual-card construct-card">
+          <div class="visual-header">
+            <div>
+              <p class="section-kicker">DETECCION · escala -10 a +10</p>
+              <h3>Distribución de la escala</h3>
+            </div>
+            <span class="visual-subtitle">7 niveles</span>
+          </div>
+
+          <div class="horizontal-chart" *ngIf="detectionScaleDistribution.length">
+            <div
+              class="horizontal-row"
+              *ngFor="let item of detectionScaleDistribution; let i = index"
+            >
+              <div class="horizontal-label" [title]="item.label">
+                {{ item.label }}
+              </div>
+              <div class="horizontal-track">
+                <span
+                  [style.width.%]="item.percent"
+                  [style.background]="chartColor(i)"
+                ></span>
+              </div>
+              <strong>{{ item.percent | number:'1.1-1' }}%</strong>
+            </div>
+          </div>
+        </article>
+
+        <article class="visual-card construct-card">
+          <div class="visual-header">
+            <div>
+              <p class="section-kicker">MEMORIA · escala -10 a +10</p>
+              <h3>Distribución de la escala</h3>
+            </div>
+            <span class="visual-subtitle">7 niveles</span>
+          </div>
+
+          <div class="horizontal-chart" *ngIf="memoryScaleDistribution.length">
+            <div
+              class="horizontal-row"
+              *ngFor="let item of memoryScaleDistribution; let i = index"
+            >
+              <div class="horizontal-label" [title]="item.label">
+                {{ item.label }}
+              </div>
+              <div class="horizontal-track">
+                <span
+                  [style.width.%]="item.percent"
+                  [style.background]="chartColor(i)"
+                ></span>
+              </div>
+              <strong>{{ item.percent | number:'1.1-1' }}%</strong>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="table-section">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">Teoría de Detección de Señales</p>
+            <h2>TDS por fase y sexo</h2>
+          </div>
+        </div>
+
+        <div class="table-wrap" *ngIf="sdtDashboardRows.length; else noSdtMetrics">
+          <table>
+            <thead>
+              <tr>
+                <th>Grupo</th>
+                <th>Fase</th>
+                <th>N</th>
+                <th>A · Hit</th>
+                <th>B · Falsa alarma</th>
+                <th>C · Miss</th>
+                <th>D · Correcta</th>
+                <th>Inseguro</th>
+                <th>Hit Rate</th>
+                <th>FA Rate</th>
+                <th>d′</th>
+                <th>C</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr *ngFor="let metric of sdtDashboardRows">
+                <td><strong>{{ metric.group }}</strong></td>
+                <td>{{ metric.phase }}</td>
+                <td>{{ metric.participantCount }}</td>
+                <td>{{ metric.hit }}</td>
+                <td>{{ metric.falseAlarm }}</td>
+                <td>{{ metric.miss }}</td>
+                <td>{{ metric.correctResponse }}</td>
+                <td>{{ metric.unsure }}</td>
+                <td>{{ formatRate(metric.hitRate) }}</td>
+                <td>{{ formatRate(metric.falseAlarmRate) }}</td>
+                <td>{{ formatNumber(metric.dPrime, 2) }}</td>
+                <td>{{ formatNumber(metric.criterionC, 2) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noSdtMetrics>
+          <p class="empty-state">No hay suficientes datos SDT para los filtros actuales.</p>
+        </ng-template>
+      </section>
+
+      <section class="table-section">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">PROFILE · escala 0–100</p>
+            <h2>Constructos por sexo</h2>
+          </div>
+        </div>
+
+        <div class="table-wrap" *ngIf="profileConstructBySex.length; else noProfileSexData">
+          <table>
+            <thead>
+              <tr>
+                <th>Sexo</th>
+                <th>Constructo</th>
+                <th>N</th>
+                <th>Media</th>
+                <th>DE</th>
+                <th>EE</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr *ngFor="let item of profileConstructBySex">
+                <td><strong>{{ item.sex }}</strong></td>
+                <td>{{ item.constructo }}</td>
+                <td>{{ item.n }}</td>
+                <td>{{ formatNumber(item.mean, 2) }}</td>
+                <td>{{ formatNumber(item.standardDeviation, 2) }}</td>
+                <td>{{ formatNumber(item.standardError, 2) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noProfileSexData>
+          <p class="empty-state">No hay datos PROFILE por sexo para los filtros actuales.</p>
+        </ng-template>
       </section>
 
       <section class="stats-strip">
         <div>
-          <span>Mediana del score</span>
+          <span>Mediana PROFILE</span>
           <strong>{{ formatNumber(medianScore) }}</strong>
         </div>
         <div>
@@ -395,12 +645,13 @@
                 <th>Formato</th>
                 <th>News set</th>
                 <th>Respuestas</th>
-                <th>Media</th>
-                <th>Mediana</th>
-                <th>Exactitud</th>
+                <th>Media PROFILE</th>
+                <th>Mediana PROFILE</th>
+                <th>Exactitud NEWS</th>
                 <th>Tiempo</th>
               </tr>
             </thead>
+
             <tbody>
               <tr *ngFor="let participant of participantSummaries">
                 <td><strong>{{ participant.participantId }}</strong></td>
@@ -417,7 +668,10 @@
             </tbody>
           </table>
         </div>
-        <ng-template #noParticipantData><p class="empty-state">No hay participantes que coincidan con los filtros.</p></ng-template>
+
+        <ng-template #noParticipantData>
+          <p class="empty-state">No hay participantes que coincidan con los filtros.</p>
+        </ng-template>
       </section>
     </div>
   </ng-template>
