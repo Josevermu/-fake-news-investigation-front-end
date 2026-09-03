@@ -516,6 +516,151 @@
             </div>
           </div>
         </article>
+
+        <article class="visual-card construct-card">
+  <div class="visual-header">
+    <div>
+      <p class="section-kicker">Perfil · escala 0–100</p>
+      <h3>Media por subconstructo</h3>
+    </div>
+    <span class="visual-subtitle">PROFILE</span>
+  </div>
+
+  <div class="horizontal-chart" *ngIf="subConstructBreakdown.length; else noSubConstructData">
+    <div class="horizontal-row" *ngFor="let item of subConstructBreakdown; let i = index">
+      <div class="horizontal-label" [title]="item.label">{{ item.label }}</div>
+      <div class="horizontal-track">
+        <span
+          [style.width.%]="scorePercent(item.averageScore)"
+          [style.background]="chartColor(i)"
+        ></span>
+      </div>
+      <strong>{{ formatNumber(item.averageScore) }}</strong>
+    </div>
+  </div>
+
+  <ng-template #noSubConstructData>
+    <p class="empty-state">Sin datos de subconstructo para la selección actual.</p>
+  </ng-template>
+</article>
+
+<article class="visual-card construct-card">
+  <div class="visual-header">
+    <div>
+      <p class="section-kicker">Perfil · escala 0–100</p>
+      <h3>Media por subcategoría</h3>
+    </div>
+    <span class="visual-subtitle">PROFILE</span>
+  </div>
+
+  <div class="horizontal-chart" *ngIf="subCategoryBreakdown.length; else noSubCategoryData">
+    <div class="horizontal-row" *ngFor="let item of subCategoryBreakdown; let i = index">
+      <div class="horizontal-label" [title]="item.label">{{ item.label }}</div>
+      <div class="horizontal-track">
+        <span
+          [style.width.%]="scorePercent(item.averageScore)"
+          [style.background]="chartColor(i + 2)"
+        ></span>
+      </div>
+      <strong>{{ formatNumber(item.averageScore) }}</strong>
+    </div>
+  </div>
+
+  <ng-template #noSubCategoryData>
+    <p class="empty-state">Sin datos de subcategoría para la selección actual.</p>
+  </ng-template>
+</article>
+
+<article class="visual-card wide-card">
+  <div class="visual-header">
+    <div>
+      <p class="section-kicker">DETECCION · escala -10 a +10</p>
+      <h3>Etiqueta de la escala por tema</h3>
+    </div>
+    <span class="visual-subtitle">Distribución por categoría</span>
+  </div>
+
+  <div class="scale-heat-board" *ngIf="detectionScaleHeatByCategory.length; else noDetectionHeatData">
+    <div class="scale-heat-row" *ngFor="let row of detectionScaleHeatByCategory">
+      <div class="scale-heat-label">{{ row.label }}</div>
+
+      <div class="scale-heat-bar">
+        <div class="scale-heat-center-line"></div>
+
+        <span
+          *ngFor="let segment of row.segments"
+          class="scale-segment"
+          [ngClass]="segment.colorClass"
+          [style.left.%]="segment.start"
+          [style.width.%]="segment.width"
+          [title]="segment.label + ': ' + segment.count + ' (' + (segment.percent | number:'1.1-1') + '%)'"
+        ></span>
+      </div>
+
+      <div class="scale-heat-total">N={{ row.total }}</div>
+    </div>
+
+    <div class="scale-legend">
+      <div class="scale-legend-item"><span class="scale-dot scale-false-3"></span> Totalmente falsa</div>
+      <div class="scale-legend-item"><span class="scale-dot scale-false-2"></span> Bastante falsa</div>
+      <div class="scale-legend-item"><span class="scale-dot scale-false-1"></span> Poco falsa</div>
+      <div class="scale-legend-item"><span class="scale-dot scale-neutral"></span> Incertidumbre</div>
+      <div class="scale-legend-item"><span class="scale-dot scale-true-1"></span> Poco verdadera</div>
+      <div class="scale-legend-item"><span class="scale-dot scale-true-2"></span> Bastante verdadera</div>
+      <div class="scale-legend-item"><span class="scale-dot scale-true-3"></span> Totalmente verdadera</div>
+    </div>
+  </div>
+
+  <ng-template #noDetectionHeatData>
+    <p class="empty-state">Sin datos de DETECCION para la selección actual.</p>
+  </ng-template>
+</article>
+
+<article class="visual-card wide-card">
+  <div class="visual-header">
+    <div>
+      <p class="section-kicker">MEMORIA · escala -10 a +10</p>
+      <h3>Etiqueta de la escala por tema</h3>
+    </div>
+    <span class="visual-subtitle">Distribución por categoría</span>
+  </div>
+
+  <div class="scale-heat-board" *ngIf="memoryScaleHeatByCategory.length; else noMemoryHeatData">
+    <div class="scale-heat-row" *ngFor="let row of memoryScaleHeatByCategory">
+      <div class="scale-heat-label">{{ row.label }}</div>
+
+      <div class="scale-heat-bar">
+        <div class="scale-heat-center-line"></div>
+
+        <span
+          *ngFor="let segment of row.segments"
+          class="scale-segment"
+          [ngClass]="segment.colorClass"
+          [style.left.%]="segment.start"
+          [style.width.%]="segment.width"
+          [title]="segment.label + ': ' + segment.count + ' (' + (segment.percent | number:'1.1-1') + '%)'"
+        ></span>
+      </div>
+
+      <div class="scale-heat-total">N={{ row.total }}</div>
+    </div>
+
+    <div class="scale-legend">
+      <div class="scale-legend-item"><span class="scale-dot scale-false-3"></span> Totalmente vieja</div>
+      <div class="scale-legend-item"><span class="scale-dot scale-false-2"></span> Bastante vieja</div>
+      <div class="scale-legend-item"><span class="scale-dot scale-false-1"></span> Poco vieja</div>
+      <div class="scale-legend-item"><span class="scale-dot scale-neutral"></span> Incertidumbre</div>
+      <div class="scale-legend-item"><span class="scale-dot scale-true-1"></span> Poco nueva</div>
+      <div class="scale-legend-item"><span class="scale-dot scale-true-2"></span> Bastante nueva</div>
+      <div class="scale-legend-item"><span class="scale-dot scale-true-3"></span> Totalmente nueva</div>
+    </div>
+  </div>
+
+  <ng-template #noMemoryHeatData>
+    <p class="empty-state">Sin datos de MEMORIA para la selección actual.</p>
+  </ng-template>
+</article>
+
       </section>
 
       <section class="table-section">

@@ -78,6 +78,24 @@ interface ProfileConstructSexStat {
   standardError: number | null;
 }
 
+interface ScaleHeatSegment {
+  label: string;
+  count: number;
+  /** Real percentage of responses represented by this segment. */
+  percent: number;
+  /** CSS start position in a symmetric -100..0..+100 visual axis. */
+  start: number;
+  /** CSS width; half of the statistical percentage because the chart has two 100-point sides. */
+  width: number;
+  colorClass: string;
+}
+
+interface ScaleHeatRow {
+  label: string;
+  total: number;
+  segments: ScaleHeatSegment[];
+}
+
 interface ParticipantSummary {
   participantId: string;
   alias: string;
@@ -224,6 +242,54 @@ get averageScore(): number | null {
   );
 }
 
+  get subConstructBreakdown(): BreakdownItem[] {
+    const profileRows = this.filteredRows.filter(
+      (row) =>
+        row.questionType.trim().toUpperCase() === 'PROFILE' &&
+        row.constructo.trim() &&
+        row.subCategory.trim()
+    );
+
+    return this.buildProfileParticipantBreakdown(
+      profileRows,
+      (row) => `${row.constructo.trim()} · ${row.subCategory.trim()}`
+    )
+      .sort((a, b) => (b.averageScore ?? -Infinity) - (a.averageScore ?? -Infinity))
+      .slice(0, 12);
+  }
+
+  get subCategoryBreakdown(): BreakdownItem[] {
+    const profileRows = this.filteredRows.filter(
+      (row) =>
+        row.questionType.trim().toUpperCase() === 'PROFILE' &&
+        row.constructo.trim() &&
+        row.subCategory.trim() &&
+        row.subCategory2.trim()
+    );
+
+    return this.buildProfileParticipantBreakdown(
+      profileRows,
+      (row) =>
+        `${row.constructo.trim()} · ${row.subCategory.trim()} · ${row.subCategory2.trim()}`
+    )
+      .sort((a, b) => (b.averageScore ?? -Infinity) - (a.averageScore ?? -Infinity))
+      .slice(0, 12);
+  }
+
+get detectionScaleHeatByCategory(): ScaleHeatRow[] {
+  return this.buildScaleHeatRows(
+    this.getNewsRowsForPhase(this.filteredRows, 'DETECCION'),
+    'DETECCION'
+  );
+}
+
+get memoryScaleHeatByCategory(): ScaleHeatRow[] {
+  return this.buildScaleHeatRows(
+    this.getNewsRowsForPhase(this.filteredRows, 'MEMORIA'),
+    'MEMORIA'
+  );
+}
+
 get medianScore(): number | null {
   return this.median(
     this.numericScores(
@@ -317,9 +383,17 @@ get standardDeviation(): number | null {
     return this.buildBreakdown(this.filteredRows.map((row) => ({ label: row.newsSet, row })))
       .sort((a, b) => (b.averageScore ?? -Infinity) - (a.averageScore ?? -Infinity));
   }
-
   get constructoBreakdown(): BreakdownItem[] {
-    return this.buildBreakdown(this.filteredRows.map((row) => ({ label: row.constructo, row })))
+    const profileRows = this.filteredRows.filter(
+      (row) =>
+        row.questionType.trim().toUpperCase() === 'PROFILE' &&
+        row.constructo.trim()
+    );
+
+    return this.buildProfileParticipantBreakdown(
+      profileRows,
+      (row) => row.constructo.trim()
+    )
       .sort((a, b) => (b.averageScore ?? -Infinity) - (a.averageScore ?? -Infinity))
       .slice(0, 12);
   }
@@ -602,6 +676,159 @@ private getScaleLabel(
 
   return null;
 }
+
+  private buildScaleHeatRows(
+    rows: DashboardRow[],
+    phase: 'DETECCION' | 'MEMORIA'
+  ): ScaleHeatRow[] {
+    const grouped = new Map<string, DashboardRow[]>();
+
+    for (const row of rows) {
+      const label = row.category.trim() || 'SIN_CATEGORIA';
+      const current = grouped.get(label) ?? [];
+      current.push(row);
+      grouped.set(label, current);
+    }
+
+    const bucketMeta =
+      phase === 'DETECCION'
+        ? [
+            { label: 'Totalmente falsa', colorClass: 'scale-false-3', side: 'left' as const },
+            { label: 'Bastante falsa', colorClass: 'scale-false-2', side: 'left' as const },
+            { label: 'Poco falsa', colorClass: 'scale-false-1', side: 'left' as const },
+            { label: 'Incertidumbre', colorClass: 'scale-neutral', side: 'center' as const },
+            { label: 'Poco verdadera', colorClass: 'scale-true-1', side: 'right' as const },
+            { label: 'Bastante verdadera', colorClass: 'scale-true-2', side: 'right' as const },
+            { label: 'Totalmente verdadera', colorClass: 'scale-true-3', side: 'right' as const },
+          ]
+        : [
+            { label: 'Totalmente vieja', colorClass: 'scale-false-3', side: 'left' as const },
+            { label: 'Bastante vieja', colorClass: 'scale-false-2', side: 'left' as const },
+            { label: 'Poco vieja', colorClass: 'scale-false-1', side: 'left' as const },
+            { label: 'Incertidumbre', colorClass: 'scale-neutral', side: 'center' as const },
+            { label: 'Poco nueva', colorClass: 'scale-true-1', side: 'right' as const },
+            { label: 'Bastante nueva', colorClass: 'scale-true-2', side: 'right' as const },
+            { label: 'Totalmente nueva', colorClass: 'scale-true-3', side: 'right' as const },
+          ];
+
+    return Array.from(grouped.entries())
+      .map(([label, categoryRows]) => {
+        const counts = new Map<string, number>(
+          bucketMeta.map((item) => [item.label, 0])
+        );
+
+        for (const row of categoryRows) {
+          const score = this.toNumber(row.score);
+
+          if (score === null || score < -10 || score > 10) {
+            continue;
+          }
+
+          const bucket = this.getScaleLabel(score, phase);
+
+          if (bucket) {
+            counts.set(bucket, (counts.get(bucket) ?? 0) + 1);
+          }
+        }
+
+        const total = Array.from(counts.values()).reduce(
+          (sum, count) => sum + count,
+          0
+        );
+
+        const leftBuckets = bucketMeta.filter((item) => item.side === 'left');
+        const centerBucket = bucketMeta.find((item) => item.side === 'center');
+        const rightBuckets = bucketMeta.filter((item) => item.side === 'right');
+
+        if (!centerBucket) {
+          return {
+            label,
+            total,
+            segments: [],
+          };
+        }
+
+        const percentOf = (bucketLabel: string): number => {
+          const count = counts.get(bucketLabel) ?? 0;
+          return total > 0 ? (count / total) * 100 : 0;
+        };
+
+        const leftTotal = leftBuckets.reduce(
+          (sum, item) => sum + percentOf(item.label),
+          0
+        );
+        const centerPercent = percentOf(centerBucket.label);
+
+        const segments: ScaleHeatSegment[] = [];
+
+        // CSS has a fixed zero line at 50%. Each half of the chart represents
+        // 100 percentage points, so statistical percentages are divided by 2.
+        const leftVisualWidth = leftTotal / 2;
+        const centerVisualWidth = centerPercent / 2;
+
+        let currentLeftStart =
+          50 - centerVisualWidth / 2 - leftVisualWidth;
+
+        for (const item of leftBuckets) {
+          const count = counts.get(item.label) ?? 0;
+          const percent = percentOf(item.label);
+          const width = percent / 2;
+
+          if (percent > 0) {
+            segments.push({
+              label: item.label,
+              count,
+              percent,
+              start: currentLeftStart,
+              width,
+              colorClass: item.colorClass,
+            });
+
+            currentLeftStart += width;
+          }
+        }
+
+        if (centerPercent > 0) {
+          segments.push({
+            label: centerBucket.label,
+            count: counts.get(centerBucket.label) ?? 0,
+            percent: centerPercent,
+            start: 50 - centerVisualWidth / 2,
+            width: centerVisualWidth,
+            colorClass: centerBucket.colorClass,
+          });
+        }
+
+        let currentRightStart = 50 + centerVisualWidth / 2;
+
+        for (const item of rightBuckets) {
+          const count = counts.get(item.label) ?? 0;
+          const percent = percentOf(item.label);
+          const width = percent / 2;
+
+          if (percent > 0) {
+            segments.push({
+              label: item.label,
+              count,
+              percent,
+              start: currentRightStart,
+              width,
+              colorClass: item.colorClass,
+            });
+
+            currentRightStart += width;
+          }
+        }
+
+        return {
+          label,
+          total,
+          segments,
+        };
+      })
+      .filter((row) => row.total > 0)
+      .sort((a, b) => b.total - a.total || a.label.localeCompare(b.label, 'es'));
+  }
 
 formatRate(value: number | null): string {
   if (value === null || !Number.isFinite(value)) {
@@ -897,37 +1124,29 @@ private hasSdtData(metrics: SdtMetrics): boolean {
     0
   );
 }
+  private getNewsRowsForPhase(
+    rows: DashboardRow[],
+    phase: 'DETECCION' | 'MEMORIA'
+  ): DashboardRow[] {
+    return rows.filter((row) => {
+      if (row.questionType.trim().toUpperCase() !== 'NEWS') {
+        return false;
+      }
 
-private getNewsRowsForPhase(
-  rows: DashboardRow[],
-  phase: 'DETECCION' | 'MEMORIA'
-): DashboardRow[] {
-  return rows.filter((row) => {
-    if (
-      row.questionType.trim().toUpperCase() !== 'NEWS'
-    ) {
-      return false;
-    }
+      const answerType = row.answerType.trim().toUpperCase();
+      const rowPhase = row.phase.trim().toUpperCase();
 
-    const answerType =
-      row.answerType.trim().toUpperCase();
+      if (answerType === 'FAKE_DETECTION') {
+        return phase === 'DETECCION';
+      }
 
-    const rowPhase =
-      row.phase.trim().toUpperCase();
+      if (answerType === 'MEMORY_TEST') {
+        return phase === 'MEMORIA';
+      }
 
-    if (phase === 'DETECCION') {
-      return (
-        answerType === 'FAKE_DETECTION' ||
-        rowPhase === 'DETECCION'
-      );
-    }
-
-    return (
-      answerType === 'MEMORY_TEST' ||
-      rowPhase === 'MEMORIA'
-    );
-  });
-}
+      return rowPhase === phase;
+    });
+  }
 
   private sampleStandardDeviation(values: number[]): number | null {
   if (values.length < 2) {
@@ -1380,6 +1599,57 @@ private correctnessStatus(row: DashboardRow): 'TRUE' | 'FALSE' | null {
     return Boolean(row.answeredAt || row.answerType || row.score);
   }
 
+
+  /**
+   * PROFILE summaries follow the guide's order of operations:
+   * first average the relevant items for each participant, then average those
+   * participant-level means across the selected sample.
+   */
+  private buildProfileParticipantBreakdown(
+    rows: DashboardRow[],
+    labelForRow: (row: DashboardRow) => string
+  ): BreakdownItem[] {
+    const grouped = new Map<string, Map<string, number[]>>();
+    let validRowCount = 0;
+
+    for (const row of rows) {
+      const label = labelForRow(row).trim();
+      const participantId = row.participantId.trim();
+      const score = this.toNumber(row.score);
+
+      if (!label || !participantId || score === null || score < 0 || score > 100) {
+        continue;
+      }
+
+      validRowCount += 1;
+
+      const byParticipant = grouped.get(label) ?? new Map<string, number[]>();
+      const scores = byParticipant.get(participantId) ?? [];
+      scores.push(score);
+      byParticipant.set(participantId, scores);
+      grouped.set(label, byParticipant);
+    }
+
+    return Array.from(grouped.entries()).map(([label, byParticipant]) => {
+      const participantMeans = Array.from(byParticipant.values())
+        .map((scores) => this.average(scores))
+        .filter((value): value is number => value !== null);
+
+      const count = Array.from(byParticipant.values()).reduce(
+        (sum, scores) => sum + scores.length,
+        0
+      );
+
+      return {
+        label,
+        count,
+        participantCount: participantMeans.length,
+        averageScore: this.average(participantMeans),
+        accuracyRate: null,
+        percent: validRowCount > 0 ? (count / validRowCount) * 100 : 0,
+      };
+    });
+  }
 
   /**
    * Avoids mixing PROFILE (0..100) and NEWS (-10..10) in one mean.
