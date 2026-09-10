@@ -1019,3 +1019,102 @@ table {
     text-align: left;
   }
 }
+
+/* TDS / SDT interpretation ------------------------------------------------- */
+.tds-guide-note {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+
+  > div {
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 179, 71, 0.1);
+    border-radius: 9px;
+    background: rgba(16, 10, 38, 0.48);
+  }
+
+  strong,
+  span {
+    display: block;
+  }
+
+  strong {
+    margin-bottom: 5px;
+    color: $text-primary;
+    font-size: 0.76rem;
+  }
+
+  span {
+    color: $text-secondary;
+    font-size: 0.7rem;
+    line-height: 1.45;
+  }
+}
+
+.tds-clarification {
+  border-color: rgba(79, 163, 255, 0.18) !important;
+  background: rgba(79, 163, 255, 0.055) !important;
+}
+
+.tds-table {
+  min-width: 1420px;
+}
+
+.tds-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.criterion-conservative {
+  border-color: rgba(79, 163, 255, 0.32);
+  background: rgba(79, 163, 255, 0.1);
+  color: #8fc4ff;
+}
+
+.criterion-liberal {
+  border-color: rgba(255, 179, 71, 0.32);
+  background: rgba(255, 179, 71, 0.1);
+  color: #ffc978;
+}
+
+.criterion-neutral,
+.discrimination-neutral {
+  border-color: rgba(232, 223, 245, 0.2);
+  background: rgba(232, 223, 245, 0.075);
+  color: $text-secondary;
+}
+
+.criterion-unavailable,
+.discrimination-unavailable {
+  border-color: rgba(232, 223, 245, 0.08);
+  background: rgba(232, 223, 245, 0.03);
+  color: $text-tertiary;
+}
+
+.discrimination-positive {
+  border-color: rgba(46, 204, 113, 0.28);
+  background: rgba(46, 204, 113, 0.09);
+  color: #7be0a6;
+}
+
+.discrimination-negative {
+  border-color: rgba(255, 107, 107, 0.28);
+  background: rgba(255, 107, 107, 0.09);
+  color: #ff9a9a;
+}
+
+@media (max-width: 900px) {
+  .tds-guide-note {
+    grid-template-columns: 1fr;
+  }
+}
+

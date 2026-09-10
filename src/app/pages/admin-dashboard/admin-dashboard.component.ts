@@ -837,6 +837,116 @@ formatRate(value: number | null): string {
 
   return `${(value * 100).toFixed(1)}%`;
 }
+
+
+/**
+ * Interprets the TDS decision criterion C using the sign convention in the
+ * project's calculation guide.
+ *
+ * The guide does not define a numerical "neutral band". To avoid inventing
+ * a research threshold, Neutral is used only when C rounds to 0.00 at the
+ * same precision shown in the dashboard. Positive C = conservative;
+ * negative C = liberal.
+ */
+criterionDecisionLabel(value: number | null): string {
+  if (value === null || !Number.isFinite(value)) {
+    return '—';
+  }
+
+  const rounded = this.roundTo(value, 2);
+
+  if (rounded === 0) {
+    return 'Neutral';
+  }
+
+  return rounded > 0 ? 'Conservador' : 'Liberal';
+}
+
+criterionDecisionTendency(
+  value: number | null,
+  phase: 'DETECCION' | 'MEMORIA'
+): string {
+  const criterion = this.criterionDecisionLabel(value);
+
+  if (criterion === '—') {
+    return '—';
+  }
+
+  if (criterion === 'Neutral') {
+    return 'Sin tendencia marcada';
+  }
+
+  if (phase === 'MEMORIA') {
+    return criterion === 'Conservador'
+      ? 'Tendencia a responder NUEVA'
+      : 'Tendencia a responder VIEJA';
+  }
+
+  return criterion === 'Conservador'
+    ? 'Tendencia a responder VERDADERA'
+    : 'Tendencia a responder FALSA';
+}
+
+criterionDecisionClass(value: number | null): string {
+  const criterion = this.criterionDecisionLabel(value);
+
+  if (criterion === 'Conservador') {
+    return 'criterion-conservative';
+  }
+
+  if (criterion === 'Liberal') {
+    return 'criterion-liberal';
+  }
+
+  if (criterion === 'Neutral') {
+    return 'criterion-neutral';
+  }
+
+  return 'criterion-unavailable';
+}
+
+/**
+ * d′ is the discrimination index. The guide states that values above zero
+ * indicate positive discrimination and values close to zero indicate
+ * performance close to chance. It does not define cut points for low,
+ * medium or high discrimination, so this dashboard does not invent them.
+ */
+discriminationInterpretation(value: number | null): string {
+  if (value === null || !Number.isFinite(value)) {
+    return '—';
+  }
+
+  const rounded = this.roundTo(value, 2);
+
+  if (rounded === 0) {
+    return 'Cercana al azar';
+  }
+
+  return rounded > 0
+    ? 'Discriminación positiva'
+    : 'd′ negativo';
+}
+
+discriminationClass(value: number | null): string {
+  if (value === null || !Number.isFinite(value)) {
+    return 'discrimination-unavailable';
+  }
+
+  const rounded = this.roundTo(value, 2);
+
+  if (rounded === 0) {
+    return 'discrimination-neutral';
+  }
+
+  return rounded > 0
+    ? 'discrimination-positive'
+    : 'discrimination-negative';
+}
+
+private roundTo(value: number, decimals: number): number {
+  const factor = Math.pow(10, decimals);
+  return Math.round((value + Number.EPSILON) * factor) / factor;
+}
   get accuracyDonutBackground(): string {
     const total = this.correctNewsResponses + this.incorrectNewsResponses;
     if (total === 0) {

@@ -663,7 +663,7 @@
 
       </section>
 
-      <section class="table-section">
+      <section class="table-section tds-section">
         <div class="section-heading">
           <div>
             <p class="section-kicker">Teoría de Detección de Señales</p>
@@ -671,8 +671,23 @@
           </div>
         </div>
 
+        <div class="tds-guide-note">
+          <div>
+            <strong>d′ · Índice de discriminación</strong>
+            <span>Indica qué tan bien se distinguen las dos clases de estímulo. d′ &gt; 0 representa discriminación positiva; un valor cercano a 0 indica desempeño cercano al azar.</span>
+          </div>
+          <div>
+            <strong>C · Criterio de decisión</strong>
+            <span>C positivo = criterio conservador; C negativo = criterio liberal; C ≈ 0 = criterio neutral.</span>
+          </div>
+          <div class="tds-clarification">
+            <strong>Importante</strong>
+            <span>La categoría D de la matriz A/B/C/D significa rechazo correcto. No debe confundirse con d′, que es el índice de discriminación.</span>
+          </div>
+        </div>
+
         <div class="table-wrap" *ngIf="sdtDashboardRows.length; else noSdtMetrics">
-          <table>
+          <table class="tds-table">
             <thead>
               <tr>
                 <th>Grupo</th>
@@ -681,12 +696,15 @@
                 <th>A · Hit</th>
                 <th>B · Falsa alarma</th>
                 <th>C · Miss</th>
-                <th>D · Correcta</th>
+                <th>D · Rechazo correcto</th>
                 <th>Inseguro</th>
                 <th>Hit Rate</th>
                 <th>FA Rate</th>
-                <th>d′</th>
-                <th>C</th>
+                <th>d′ · Discriminación</th>
+                <th>Interpretación d′</th>
+                <th>C · Decisión</th>
+                <th>Tipo de criterio</th>
+                <th>Tendencia de respuesta</th>
               </tr>
             </thead>
 
@@ -702,8 +720,25 @@
                 <td>{{ metric.unsure }}</td>
                 <td>{{ formatRate(metric.hitRate) }}</td>
                 <td>{{ formatRate(metric.falseAlarmRate) }}</td>
-                <td>{{ formatNumber(metric.dPrime, 2) }}</td>
-                <td>{{ formatNumber(metric.criterionC, 2) }}</td>
+                <td><strong>{{ formatNumber(metric.dPrime, 2) }}</strong></td>
+                <td>
+                  <span
+                    class="tds-badge"
+                    [ngClass]="discriminationClass(metric.dPrime)"
+                  >
+                    {{ discriminationInterpretation(metric.dPrime) }}
+                  </span>
+                </td>
+                <td><strong>{{ formatNumber(metric.criterionC, 2) }}</strong></td>
+                <td>
+                  <span
+                    class="tds-badge"
+                    [ngClass]="criterionDecisionClass(metric.criterionC)"
+                  >
+                    {{ criterionDecisionLabel(metric.criterionC) }}
+                  </span>
+                </td>
+                <td>{{ criterionDecisionTendency(metric.criterionC, metric.phase) }}</td>
               </tr>
             </tbody>
           </table>
