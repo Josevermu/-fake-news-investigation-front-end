@@ -166,32 +166,6 @@
 
 // ---- Navigation ----
 
-.btn-center {
-  display: flex;
-  justify-content: center;
-}
-
-.mt-2 {
-  margin-top: 1.5rem;
-}
-
-.btn-primary {
-  padding: 0.6rem 2rem;
-  border-radius: 8px;
-  border: none;
-  background: $accent-gold;
-  color: #000;
-  font-size: 24px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.2s;
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: default;
-  }
-}
-
 // === Mobile optimizations ===
 @media (max-width: 768px) {
   .screen {
@@ -234,18 +208,7 @@
 
   .answer-display {
     font-size: 16px;
-  }
-
-  .btn-primary {
-    font-size: 18px;
-    padding: 0.5rem 1.5rem;
-  }
-
-  .btn-back {
-    font-size: 14px;
-    padding: 6px 18px;
-  }
-}
+  }}
 
 // === Mobile landscape optimizations ===
 @media (max-width: 768px) and (orientation: landscape) {
@@ -315,10 +278,4 @@
   .answer-display {
     font-size: 14px;
     margin-top: 0.4rem;
-  }
-
-  .btn-primary {
-    font-size: 16px;
-    padding: 0.4rem 1.2rem;
-  }
-}
+  }}

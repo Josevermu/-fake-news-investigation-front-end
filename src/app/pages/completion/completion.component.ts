@@ -134,15 +134,20 @@ export class CompletionComponent implements OnInit {
     this.router.navigate(['/reward']);
   }
 
+  /**
+   * Converts a NEWS score (-10 … +10) into the participant's binary answer.
+   * 0 = unsure; negatives = Falsa (Part 1) / Vieja (Part 2);
+   * positives = Verdadera (Part 1) / Nueva (Part 2).
+   */
   private scoreToBinaryLabel(score: number | null, phase: 'PHASE1' | 'PHASE2'): string {
     if (score === null || score === undefined) return '—';
-    if (score === 50) return 'No estoy seguro';
+    if (score === 0) return 'No estoy seguro';
 
     if (phase === 'PHASE1') {
-      return score < 50 ? 'Falsa' : 'Verdadera';
+      return score < 0 ? 'Falsa' : 'Verdadera';
     }
 
-    return score < 50 ? 'Vieja' : 'Nueva';
+    return score < 0 ? 'Vieja' : 'Nueva';
   }
 
   private buildIcon(correct: string, yours: string): string {

@@ -40,13 +40,6 @@
   gap: 12px;
 }
 
-.results-title {
-  font-size: 24px;
-  font-weight: 800;
-  color: $text-primary;
-  margin: 0 0 10px;
-}
-
 .result-row {
   display: grid;
   grid-template-columns: 34px 1fr;
@@ -189,19 +182,9 @@
     padding: 0;
   }
 
-  .completion-header {
-    margin-bottom: 0.75rem;
-  }
-
   .completion-title {
     font-size: 20px;
     margin-bottom: 0.25rem;
-  }
-
-  .completion-subtitle {
-    font-size: 14px;
-    line-height: 1.4;
-    margin-bottom: 0.5rem;
   }
 
   .step-indicator {
@@ -212,10 +195,6 @@
   .results-section {
     gap: 6px;
     margin-bottom: 0.75rem;
-  }
-
-  .result-card {
-    padding: 0.5rem 0.75rem;
   }
 
   .result-label,

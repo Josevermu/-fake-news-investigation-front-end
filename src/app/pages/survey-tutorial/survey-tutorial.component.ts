@@ -2,13 +2,13 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GlassCardComponent } from '@shared/components/glass-card/glass-card.component';
-import { ToastComponent } from '@shared/components/toast/toast.component';
 import { ProgressService } from '@services/common/progress.service';
+import { FAKE_DETECTION_SCALE } from '@constants/survey-data';
 
 @Component({
   selector: 'app-survey-tutorial',
   standalone: true,
-  imports: [CommonModule, GlassCardComponent, ToastComponent],
+  imports: [CommonModule, GlassCardComponent],
   templateUrl: './survey-tutorial.component.html',
   styleUrl: './survey-tutorial.component.scss',
 })
@@ -21,7 +21,7 @@ export class SurveyTutorialComponent implements OnInit {
   selectionLocked = signal(false);
   showingFeedback = signal(false);
 
-  readonly scaleValues: number[] = Array.from({ length: 21 }, (_, i) => i - 10);
+  readonly scaleValues: number[] = FAKE_DETECTION_SCALE;
 
   readonly steps = [
     {
@@ -79,10 +79,7 @@ export class SurveyTutorialComponent implements OnInit {
     } else {
       this.currentStep.update((s) => s + 1);
       this.progressService.setSurveyTutorialProgress(this.currentStep(), this.steps.length);
-      // Reset selection when moving to next step
-      this.selectedValue.set(null);
-      this.selectionLocked.set(false);
-      this.showingFeedback.set(false);
+      this.resetExampleSelection();
     }
   }
 
@@ -90,10 +87,7 @@ export class SurveyTutorialComponent implements OnInit {
     if (this.currentStep() > 0) {
       this.currentStep.update((s) => s - 1);
       this.progressService.setSurveyTutorialProgress(this.currentStep(), this.steps.length);
-      // Reset selection when going back
-      this.selectedValue.set(null);
-      this.selectionLocked.set(false);
-      this.showingFeedback.set(false);
+      this.resetExampleSelection();
     }
   }
 
@@ -108,5 +102,12 @@ export class SurveyTutorialComponent implements OnInit {
     setTimeout(() => {
       this.showingFeedback.set(false);
     }, 1500);
+  }
+
+  /** Clears the practice-example answer when changing steps. */
+  private resetExampleSelection(): void {
+    this.selectedValue.set(null);
+    this.selectionLocked.set(false);
+    this.showingFeedback.set(false);
   }
 }

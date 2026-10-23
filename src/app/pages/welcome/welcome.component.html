@@ -27,6 +27,11 @@
       </div>
     </div>
 
+    <!-- Authorship credit: the card's space-between layout keeps it at the bottom -->
+    <p class="author-credit" *ngIf="currentStep() === 0">
+      by Alejandro Aristizabal, Jose Bermudez y Alejandra Benavidez
+    </p>
+
     <!-- ========== STEP 1: Consent — initial question ========== -->
     <div class="consent-content anim" *ngIf="currentStep() === 1">
       <div class="welcome-title">Consentimiento</div>

@@ -2,13 +2,13 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GlassCardComponent } from '@shared/components/glass-card/glass-card.component';
-import { ToastComponent } from '@shared/components/toast/toast.component';
 import { ProgressService } from '@services/common/progress.service';
+import { MEMORY_TEST_SCALE } from '@constants/survey-data';
 
 @Component({
   selector: 'app-survey-tutorial-phase2',
   standalone: true,
-  imports: [CommonModule, GlassCardComponent, ToastComponent],
+  imports: [CommonModule, GlassCardComponent],
   templateUrl: './survey-tutorial-phase2.component.html',
   styleUrl: './survey-tutorial-phase2.component.scss',
 })
@@ -21,7 +21,7 @@ export class SurveyTutorialPhase2Component implements OnInit {
   selectionLocked = signal(false);
   showingFeedback = signal(false);
 
-  readonly scaleValues: number[] = Array.from({ length: 21 }, (_, i) => i - 10);
+  readonly scaleValues: number[] = MEMORY_TEST_SCALE;
 
   readonly steps = [
     {
@@ -73,10 +73,7 @@ export class SurveyTutorialPhase2Component implements OnInit {
     } else {
       this.currentStep.update((s) => s + 1);
       this.progressService.setSurveyTutorialPhase2Progress(this.currentStep(), this.steps.length);
-      // Reset selection when moving to next step
-      this.selectedValue.set(null);
-      this.selectionLocked.set(false);
-      this.showingFeedback.set(false);
+      this.resetExampleSelection();
     }
   }
 
@@ -84,10 +81,7 @@ export class SurveyTutorialPhase2Component implements OnInit {
     if (this.currentStep() > 0) {
       this.currentStep.update((s) => s - 1);
       this.progressService.setSurveyTutorialPhase2Progress(this.currentStep(), this.steps.length);
-      // Reset selection when going back
-      this.selectedValue.set(null);
-      this.selectionLocked.set(false);
-      this.showingFeedback.set(false);
+      this.resetExampleSelection();
     }
   }
 
@@ -102,5 +96,12 @@ export class SurveyTutorialPhase2Component implements OnInit {
     setTimeout(() => {
       this.showingFeedback.set(false);
     }, 1500);
+  }
+
+  /** Clears the practice-example answer when changing steps. */
+  private resetExampleSelection(): void {
+    this.selectedValue.set(null);
+    this.selectionLocked.set(false);
+    this.showingFeedback.set(false);
   }
 }

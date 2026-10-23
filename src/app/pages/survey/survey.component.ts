@@ -8,8 +8,9 @@ import { LoadingComponent } from '@shared/components/loading/loading.component';
 import { SurveyService } from '@services/survey/survey.service';
 import { ProgressService } from '@services/common/progress.service';
 import { QuestionSession, CorrectAnswer, AnswerType } from '@models/survey.interface';
-import { EXP1_SCALE, EXP2_SCALE } from '@constants/survey-data';
 import { FAKE_DETECTION_SCALE, MEMORY_TEST_SCALE } from '@constants/survey-data';
+
+const ANSWER_SAVED_MESSAGE = 'Su respuesta fue guardada exitosamente ✓';
 
 @Component({
   selector: 'app-survey',
@@ -89,16 +90,6 @@ export class SurveyComponent implements OnInit {
     return q ? this.surveyService.getQuestionImagePath(q) : null;
   }
 
-  /** Whether the current format shows images (now includes TEXT). */
-  get isVisualFormat(): boolean {
-    return this.questionImagePath !== null;
-  }
-
-  /** Label for the current presentation format. */
-  get formatLabel(): string {
-    return this.surveyService.presentationFormat;
-  }
-
   /** Feedback text for current question (shown in GROUP_A). */
   get feedbackLabel(): string {
     const q = this.currentQuestion;
@@ -176,11 +167,11 @@ export class SurveyComponent implements OnInit {
       this.showingFeedback.set(true);
       setTimeout(() => {
         this.showingFeedback.set(false);
-        this.toast.show('Su respuesta fue guardada exitosamente ✓');
+        this.toast.show(ANSWER_SAVED_MESSAGE);
         this.advanceAfterDelay();
       }, 2000);
     } else {
-      this.toast.show('Su respuesta fue guardada exitosamente ✓');
+      this.toast.show(ANSWER_SAVED_MESSAGE);
       this.advanceAfterDelay();
     }
   }

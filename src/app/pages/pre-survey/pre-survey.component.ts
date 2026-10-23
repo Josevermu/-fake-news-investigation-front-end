@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, computed, inject, OnInit, signal, WritableSignal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, WritableSignal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GlassCardComponent } from '@shared/components/glass-card/glass-card.component';
@@ -18,7 +18,9 @@ export class PreSurveyComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly surveyService = inject(SurveyService);
   private readonly progressService = inject(ProgressService);
-  private readonly cdr = inject(ChangeDetectorRef);
+
+  /** Number of questions per page (used by the template to number questions). */
+  readonly groupSize = PRE_SURVEY_GROUP_SIZE;
 
   /** PROFILE questions from the session, sorted by assignedOrder. */
   profileQuestions: QuestionSession[] = [];
@@ -38,10 +40,11 @@ export class PreSurveyComponent implements OnInit {
   /** Whether the final submission is in progress. */
   isSubmitting: WritableSignal<boolean> = signal(false);
 
-readonly scale = PRE_SURVEY_SCALE.map(value => ({
-  label: value.toString(),
-  value
-}));
+  readonly scale = PRE_SURVEY_SCALE.map((value) => ({
+    label: value.toString(),
+    value,
+  }));
+
   /** Questions shown on the current page. */
   readonly currentGroupQuestions = computed<QuestionSession[]>(() => {
     const start = this.currentGroupIndex() * PRE_SURVEY_GROUP_SIZE;

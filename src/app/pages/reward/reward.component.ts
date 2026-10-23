@@ -4,6 +4,12 @@ import { Reward } from '@models/survey.interface';
 import { SurveyService } from '@services/survey/survey.service';
 import { GlassCardComponent } from '@shared/components/glass-card/glass-card.component';
 
+/** Shape of the errors received from the reward request (HTTP or local). */
+interface RewardRequestError {
+  status?: number;
+  error?: { message?: string } | null;
+}
+
 @Component({
   selector: 'app-reward',
   standalone: true,
@@ -52,14 +58,14 @@ export class RewardComponent {
           '✓ Tu selección ha sido registrada exitosamente';
       },
 
-      error: (err) => {
+      error: (err: RewardRequestError | null) => {
         this.submittingRewardId = null;
         this.errorMessage = this.getRewardErrorMessage(err);
       },
     });
   }
 
-  private getRewardErrorMessage(err: any): string {
+  private getRewardErrorMessage(err: RewardRequestError | null): string {
     const backendMessage = err?.error?.message ?? '';
 
     if (err?.status === 400) {

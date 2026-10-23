@@ -50,21 +50,6 @@
   margin-bottom: 1.25rem;
 }
 
-.format-badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(0, 0, 0, 0.55);
-  color: $white-color;
-  font-size: 24px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 20px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  z-index: 2;
-}
-
 .question-image {
   width: 100%;
   max-width: 420px;
@@ -175,47 +160,6 @@
   }
 }
 
-// === Primary action button ===
-.btn-primary {
-  background: linear-gradient(135deg, $accent-orange, $accent-gold);
-  color: $dark-surface;
-  font-weight: 700;
-  border: none;
-  padding: 10px 24px;
-  border-radius: $border-radius-button;
-  cursor: pointer;
-  font-size: 24px;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  width: auto;
-
-  &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
-  }
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-  }
-}
-
-.w-full {
-  width: 100%;
-}
-
-.btn-center {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-
-.mt-4 {
-  margin-top: 1rem;
-}
-
 // === Mobile landscape optimizations ===
 @media (max-width: 768px) and (orientation: landscape) {
   .screen {
@@ -312,21 +256,4 @@
   margin-bottom: 16px;
   line-height: 1.5;
   font-style: italic;
-}
-
-.btn-secondary {
-  background: transparent;
-  border: 1px solid $accent-gold;
-  color: $accent-gold;
-  font-weight: 700;
-  padding: 10px 24px;
-  border-radius: $border-radius-button;
-  cursor: pointer;
-  font-size: 24px;
-  transition: all 0.3s ease;
-
-  &:hover {
-    background: rgba(255, 179, 71, 0.1);
-    transform: translateY(-1px);
-  }
 }
