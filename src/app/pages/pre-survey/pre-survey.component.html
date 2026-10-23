@@ -31,7 +31,7 @@
         [class.answered]="isLocked(q.questionCode)"
       >
         <p class="question-number">
-          Pregunta {{ currentGroupIndex() * 3 + i + 1 }}
+          Pregunta {{ currentGroupIndex() * groupSize + i + 1 }}
         </p>
         <p class="question-text">{{ q.itemText }}</p>
 

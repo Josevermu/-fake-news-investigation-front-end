@@ -2,13 +2,12 @@ import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 import { SurveyService } from '@services/survey/survey.service';
 
-export const authGuard: CanActivateFn = (route, state) => {
+/** Allows access only when a registered participant session exists. */
+export const authGuard: CanActivateFn = () => {
   const surveyService = inject(SurveyService);
   const router = inject(Router);
 
-  const session = surveyService.session();
-  
-  if (!session || !session.participantId) {
+  if (!surveyService.session()?.participantId) {
     // Redirect to welcome if no session exists
     router.navigate(['/welcome']);
     return false;

@@ -1,4 +1,4 @@
-import { Reward, ExperimentSession, QuestionType, CorrectAnswer, FeedbackTiming, PresentationFormat, ParticipantRequest, NewsSet } from '@models/survey.interface';
+import { Reward, ExperimentSession, FeedbackTiming, PresentationFormat, ParticipantRequest, NewsSet } from '@models/survey.interface';
 
 // ─── Mock session (offline / demo mode) ──────────────────────────────────────
 
@@ -18,14 +18,13 @@ export function buildMockSession(_data: ParticipantRequest): ExperimentSession {
   };
 }
 
+// ─── NEWS scales ──────────────────────────────────────────────────────────────
 
+/** Part 1 (fake detection) scale: -10 … +10 → 21 buttons. */
+export const FAKE_DETECTION_SCALE: number[] = Array.from({ length: 21 }, (_, i) => i - 10);
 
-export const FAKE_DETECTION_SCALE: number[] = Array.from({ length: 21 }, (_, i) => i -10);
-export const MEMORY_TEST_SCALE: number[]    =  Array.from({ length: 21 }, (_, i) => i - 10);
-// Keep these aliases so nothing else breaks
-export const EXP1_SCALE  = FAKE_DETECTION_SCALE;
-export const EXP2_SCALE  = MEMORY_TEST_SCALE;
-export const SCALE_VALUES = FAKE_DETECTION_SCALE;
+/** Part 2 (memory test) scale: -10 … +10 → 21 buttons. */
+export const MEMORY_TEST_SCALE: number[] = Array.from({ length: 21 }, (_, i) => i - 10);
 
 // ─── Shared constants ─────────────────────────────────────────────────────────
 

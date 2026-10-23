@@ -31,7 +31,6 @@ export class SurveyBreakComponent {
 
     // YouTube Shorts can be embedded using the standard embed URL with the Short's ID
     const embedUrl = `https://www.youtube.com/embed/${videoId}`;
-    console.log('YouTube embed URL:', embedUrl);
     return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
   }
 

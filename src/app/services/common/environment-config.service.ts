@@ -54,15 +54,4 @@ export class EnvironmentConfigService {
       this.config = fallback;
     }
   }
-
-  getValue<K extends keyof AppEnvironmentConfig>(
-    key: K
-  ): AppEnvironmentConfig[K] {
-    if (!this.config) {
-      throw new Error(
-        'Attempted to access configuration before it was loaded.'
-      );
-    }
-    return this.config[key];
-  }
 }
