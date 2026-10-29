@@ -1,4 +1,9 @@
-<section class="screen">
+<section class="screen" [class.eye-demo-screen]="surveyService.isEyeTrackingDemo()">
+  <aside class="survey-camera-preview" *ngIf="surveyService.isEyeTrackingDemo() || eye.enabled()">
+    <strong>Vista de cámara · WebGazer</strong>
+    <p>La cámara y los puntos de seguimiento aparecerán aquí al activarla.</p>
+    <p>Estado: {{ eye.status() }} · {{ eye.samples().length }} muestras</p>
+  </aside>
   <app-glass-card>
     <aside class="eye-opt-in">
       <p>Opcional: seguimiento ocular con cámara. Los datos permanecen en el navegador y no se envían al servidor.</p>
@@ -7,6 +12,7 @@
       <button type="button" *ngIf="eye.enabled()" (click)="eye.stop()">Detener cámara</button>
       <small>{{ eye.status() }} · {{ eye.samples().length }} muestras</small>
     </aside>
+    <p *ngIf="surveyService.isEyeTrackingDemo()" class="mock-banner">MODO MOCK · Preguntas simuladas · Sin llamadas a la API</p>
     <!-- Header: question counter + percentage -->
     <div class="survey-header">
       <span class="counter">{{ questionCounter }}</span>
