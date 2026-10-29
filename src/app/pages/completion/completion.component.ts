@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GlassCardComponent } from '@shared/components/glass-card/glass-card.component';
 import { SurveyService } from '@services/survey/survey.service';
+import { EyeTrackingService } from '@services/survey/eye-tracking.service';
 import { ProgressService } from '@services/common/progress.service';
 import { AnswerType, CorrectAnswer } from '@models/survey.interface';
 
@@ -16,6 +17,7 @@ import { AnswerType, CorrectAnswer } from '@models/survey.interface';
 export class CompletionComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly surveyService = inject(SurveyService);
+  readonly eye = inject(EyeTrackingService);
   private readonly progressService = inject(ProgressService);
 
   currentStep: WritableSignal<number> = signal(0);
