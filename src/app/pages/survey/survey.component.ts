@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, ViewChild, WritableSignal, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, ViewChild, WritableSignal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GlassCardComponent } from '@shared/components/glass-card/glass-card.component';
@@ -26,7 +26,7 @@ const ANSWER_SAVED_MESSAGE = 'Su respuesta fue guardada exitosamente ✓';
   templateUrl: './survey.component.html',
   styleUrl: './survey.component.scss',
 })
-export class SurveyComponent implements OnInit {
+export class SurveyComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly surveyService = inject(SurveyService);
   readonly eye = inject(EyeTrackingService);
@@ -132,7 +132,10 @@ export class SurveyComponent implements OnInit {
     const currentIdx = this.surveyService.currentQuestionIndex();
     const total = this.surveyService.allNewsQuestions.length;
     this.progressService.setSurveyProgress(currentIdx, total);
+    const q = this.currentQuestion;
+    if (q && this.eye.enabled()) requestAnimationFrame(() => this.eye.questionStart(q.questionCode, this.isMemoryTest ? 'MEMORIA' : 'DETECCION'));
   }
+  ngOnDestroy(): void { this.eye.pause(); }
 
   async enableEyeTracking(): Promise<void> {
     try {
