@@ -28,7 +28,7 @@ const ANSWER_SAVED_MESSAGE = 'Su respuesta fue guardada exitosamente ✓';
 })
 export class SurveyComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
-  private readonly surveyService = inject(SurveyService);
+  readonly surveyService = inject(SurveyService);
   readonly eye = inject(EyeTrackingService);
   private readonly progressService = inject(ProgressService);
   private readonly cdr = inject(ChangeDetectorRef);
