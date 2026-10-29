@@ -1,5 +1,10 @@
 <section class="screen anim">
   <app-glass-card>
+    <div *ngIf="eye.samples().length" class="eye-export">
+      <p>Prueba de seguimiento ocular: {{ eye.samples().length }} muestras guardadas solo en este navegador.</p>
+      <button type="button" (click)="eye.exportJson()">Exportar miradas (JSON)</button>
+      <button type="button" (click)="eye.stop()">Apagar cámara</button>
+    </div>
     <ng-container *ngIf="isGroupB; else groupACompletion">
       <div class="completion-content">
         <div class="completion-icon">📋</div>
