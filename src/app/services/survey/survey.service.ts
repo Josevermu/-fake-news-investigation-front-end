@@ -10,6 +10,10 @@ import {
   BatchAnswerRequest,
   BatchAnswerResponse,
   FeedbackTiming,
+  NewsSet,
+  PresentationFormat,
+  QuestionType,
+  CorrectAnswer,
   Reward,
   AnswerType,
   RewardSelectionRequest,
@@ -34,6 +38,9 @@ export class SurveyService {
 
   /** Epoch seconds when the survey (news phase) started. */
   public startedAt = 0;
+
+  /** Isolated local WebGazer demo; never submits anything to the research API. */
+  readonly isEyeTrackingDemo = signal(false);
 
   /** Symbolic rewards (frontend-only). */
   public readonly rewards: WritableSignal<Reward[]> = signal(DEFAULT_REWARDS);
@@ -63,6 +70,7 @@ export class SurveyService {
    * Only genuine network failures (status 0) fall back to a local demo session.
    */
   register(data: ParticipantRequest): Observable<ExperimentSession> {
+    this.isEyeTrackingDemo.set(false);
     return this.http
       .post<ExperimentSession>(API_ROUTES.participants.register, data)
       .pipe(
@@ -79,6 +87,57 @@ export class SurveyService {
           return throwError(() => err);
         })
       );
+  }
+
+  /**
+   * Mimics POST /participants/register by creating a real ExperimentSession
+   * shape in memory. No HTTP calls, auth bypass, or production data changes.
+   */
+  startEyeTrackingDemo(feedbackTiming: FeedbackTiming = FeedbackTiming.GROUP_B): void {
+    const create = (
+      code: string, order: number, itemText: string,
+      correctAnswer: CorrectAnswer | null,
+    ): QuestionSession => ({
+      questionCode: code,
+      questionType: QuestionType.NEWS,
+      itemText,
+      assignedOrder: order,
+      presentationFormat: PresentationFormat.TEXT,
+      correctAnswer,
+      referenceApa: null,
+      supportingQuote: null,
+      phase: null,
+      category: 'DEMO',
+      novelty: null,
+      sourceVerificationUrl: null,
+      factCheckUrl: null,
+      originName: 'Mock local',
+      fileName: null,
+      scaleOptions: null,
+    });
+    const part1 = [
+      create('MOCK_D1', 1, 'Un titular afirma que un telescopio encontró un océano de chocolate en Marte. ¿Es falso o verdadero?', CorrectAnswer.FAKE),
+      create('MOCK_D2', 2, 'Una noticia explica que la Luna refleja parte de la luz del Sol. ¿Es falsa o verdadera?', CorrectAnswer.REAL),
+      create('MOCK_D3', 3, 'Un anuncio dice que las plantas crecen sin ninguna fuente de energía. ¿Es falso o verdadero?', CorrectAnswer.FAKE),
+      create('MOCK_D4', 4, 'Una noticia describe el uso de satélites para observar las nubes. ¿Es falsa o verdadera?', CorrectAnswer.REAL),
+    ];
+    const part2 = [
+      create('MOCK_D2', 1, part1[1].itemText, CorrectAnswer.REAL),
+      create('MOCK_N1', 2, 'Un titular de prueba menciona una ciudad submarina de cristal. ¿Es vieja o nueva?', CorrectAnswer.FAKE),
+      create('MOCK_D4', 3, part1[3].itemText, CorrectAnswer.REAL),
+      create('MOCK_N2', 4, 'Una noticia de prueba habla de la agricultura en una estación orbital. ¿Es vieja o nueva?', CorrectAnswer.FAKE),
+    ];
+    const mock: ExperimentSession = {
+      participantId: 999001,
+      feedbackTiming,
+      presentationFormat: PresentationFormat.TEXT,
+      newsSet: NewsSet.TECHNOLOGY,
+      profileQuestions: [],
+      newsPart1Questions: part1,
+      newsPart2Questions: part2,
+    };
+    this.initSession(mock);
+    this.isEyeTrackingDemo.set(true);
   }
 
   private initSession(session: ExperimentSession): void {
@@ -159,6 +218,9 @@ export class SurveyService {
    * Falls back gracefully if the backend is unreachable.
    */
   submitBatch(): Observable<BatchAnswerResponse> {
+    if (this.isEyeTrackingDemo()) {
+      return of({ participantId: this.participantId ?? 999001, savedCount: this.collectedAnswers().length });
+    }
     const id = this.participantId;
     if (!id) {
       return of({ participantId: 0, savedCount: 0 });
@@ -192,6 +254,9 @@ export class SurveyService {
    * The participant must have completed the experiment first.
    */
   selectReward(rewardId: number): Observable<RewardSelectionResponse> {
+    if (this.isEyeTrackingDemo()) {
+      return of({ participantId: this.participantId ?? 999001, rewardId, message: 'Selección simulada local.' });
+    }
     const id = this.participantId;
 
     if (!id) {
@@ -210,6 +275,7 @@ export class SurveyService {
    * Reset survey state for a new session.
    */
   reset(): void {
+    this.isEyeTrackingDemo.set(false);
     this.session.set(null);
     this.currentQuestionIndex.set(0);
     this.collectedAnswers.set([]);
