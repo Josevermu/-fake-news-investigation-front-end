@@ -93,6 +93,11 @@ export const LAYOUT_ROUTES: Routes = [
           ),
       },
       {
+        path: 'eye-tracking-lab',
+        title: 'WebGazer local eye tracking test',
+        loadComponent: () => import('@pages/eye-tracking-lab/eye-tracking-lab.component').then(c => c.EyeTrackingLabComponent),
+      },
+      {
         path: 'admin/control-room',
         title: 'Control Room — Export CSV',
         loadComponent: () =>
