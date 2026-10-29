@@ -6,6 +6,7 @@ import { ProgressBarComponent } from '@shared/components/progress-bar/progress-b
 import { ToastComponent } from '@shared/components/toast/toast.component';
 import { LoadingComponent } from '@shared/components/loading/loading.component';
 import { SurveyService } from '@services/survey/survey.service';
+import { EyeTrackingService } from '@services/survey/eye-tracking.service';
 import { ProgressService } from '@services/common/progress.service';
 import { QuestionSession, CorrectAnswer, AnswerType } from '@models/survey.interface';
 import { FAKE_DETECTION_SCALE, MEMORY_TEST_SCALE } from '@constants/survey-data';
@@ -28,6 +29,7 @@ const ANSWER_SAVED_MESSAGE = 'Su respuesta fue guardada exitosamente ✓';
 export class SurveyComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly surveyService = inject(SurveyService);
+  readonly eye = inject(EyeTrackingService);
   private readonly progressService = inject(ProgressService);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -132,6 +134,14 @@ export class SurveyComponent implements OnInit {
     this.progressService.setSurveyProgress(currentIdx, total);
   }
 
+  async enableEyeTracking(): Promise<void> {
+    try {
+      await this.eye.enable();
+      const q = this.currentQuestion;
+      if (q) this.eye.questionStart(q.questionCode, this.isMemoryTest ? 'MEMORIA' : 'DETECCION');
+    } catch (err) { console.warn('Eye tracking unavailable:', err); }
+  }
+
   selectScale(value: number): void {
     if (this.showingFeedback() || this.selectionLocked()) return;
 
@@ -148,6 +158,8 @@ export class SurveyComponent implements OnInit {
       ? (this.isOldNews(question.questionCode) ? 'V' : 'N')
       : null;
 
+    // Stop sampling at answer time, before feedback or transitions.
+    this.eye.answer(value);
     // Record answer locally
     this.surveyService.recordAnswer(
       question.questionCode,
@@ -194,8 +206,13 @@ export class SurveyComponent implements OnInit {
 
       // Ensure UI updates immediately after the question index changes
       try { this.cdr.detectChanges(); } catch { /* no-op */ }
+      if (hasMore && !(wasInPhase1 && this.surveyService.isCurrentlyInPhase2)) {
+        const next = this.currentQuestion;
+        if (next) requestAnimationFrame(() => this.eye.questionStart(next.questionCode, this.isMemoryTest ? 'MEMORIA' : 'DETECCION'));
+      }
       if (!hasMore) {
           // All questions answered — submit batch to backend
+          this.eye.pause();
           this.isSaving.set(true);
           this.surveyService.submitBatch().subscribe({
             next: () => {
