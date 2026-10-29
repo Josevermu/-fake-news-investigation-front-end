@@ -24,3 +24,13 @@ Use the usual backend-driven NEWS survey locally and opt in using **Activar segu
 - Gaze coordinates are **estimates**, not validated fixations or clinical-grade eye tracking. Accuracy requires calibration and testing against known on-screen targets.
 - WebGazer currently uses the library site's script URL at runtime. Before a reproducible study, pin and self-host an audited release; do not depend on a mutable third-party script for production.
 - Do not test with real research participants before updating study consent and data handling procedures.
+
+## Updated: full survey mock flow
+
+Open `http://localhost:4200/eye-tracking-lab` and click **Abrir cuestionario MOCK (sin API)**. This builds an in-memory `ExperimentSession` with 4 detection and 4 memory questions and routes to `/survey`. It never calls the registration or answer-submission endpoints, and the mock participant ID is used only locally.
+
+On `/survey`, choose **Activar seguimiento ocular** and allow webcam access. The right-hand preview panel shows camera status, while the WebGazer video is positioned alongside it. Continue answering the mock questions. At completion, export the gaze JSON.
+
+Alternatively, remain on the isolated lab route to answer mock questions without camera permission (gaze samples will be empty until the camera is started). Camera access is not required to progress through mock questions.
+
+Desktop browser + localhost is recommended. The WebGazer default video DOM container may differ by library version; if the camera isn't visible, inspect `#webgazerVideoContainer` and `#webgazerVideoFeed`. If camera fails, check devtools console and OS/browser camera permissions.
