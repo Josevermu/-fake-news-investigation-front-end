@@ -257,3 +257,10 @@
   line-height: 1.5;
   font-style: italic;
 }
+
+/* Mock testing panel; WebGazer creates its own webcam video container. */
+.mock-banner{padding:10px 14px;background:#352447;color:#ffcd74;border-radius:10px;text-align:center}
+.survey-camera-preview{position:fixed;right:16px;top:92px;width:244px;min-height:225px;padding:12px;background:#171325;border:1px solid #f0b45a;border-radius:14px;z-index:100;color:#fff;font-size:13px;box-sizing:border-box}
+.survey-camera-preview p{font-size:12px;margin:10px 0 0;color:#ded6ea}
+@media(min-width:1450px){.screen:has(.survey-camera-preview){padding-right:270px}}
+@media(max-width:900px){.survey-camera-preview{position:relative;top:auto;right:auto;order:-1;width:min(100%,320px);min-height:220px;margin:0 auto 14px}}
