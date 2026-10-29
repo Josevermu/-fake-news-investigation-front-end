@@ -1,3 +1,31 @@
 @import "reset";
 @import "colors";
 @import "globals";
+
+/* WebGazer inserts its preview under <body>, outside Angular component CSS.
+   Place its actual camera video above the right-side survey preview area. */
+body:has(.survey-camera-preview) #webgazerVideoContainer {
+  position: fixed !important;
+  top: 138px !important;
+  right: 30px !important;
+  left: auto !important;
+  width: 216px !important;
+  height: 160px !important;
+  z-index: 105 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+  border-radius: 10px !important;
+}
+body:has(.survey-camera-preview) #webgazerVideoFeed {
+  max-width: 216px !important;
+  max-height: 160px !important;
+}
+@media (max-width:900px) {
+  body:has(.survey-camera-preview) #webgazerVideoContainer {
+    position: fixed !important;
+    right: 24px !important;
+    top: 24px !important;
+    width: 148px !important;
+    height: 110px !important;
+  }
+}
