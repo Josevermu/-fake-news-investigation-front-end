@@ -1,5 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, signal } from '@angular/core';
+import { Component, OnDestroy, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { SurveyService } from '@services/survey/survey.service';
+import { FeedbackTiming } from '@models/survey.interface';
 
 type Point = { x: number; y: number };
 type Gazer = {
@@ -21,6 +24,13 @@ interface Sample { question: string; phase: string; time: string; elapsedMs: num
   styleUrls: ['./eye-tracking-lab.component.scss'],
 })
 export class EyeTrackingLabComponent implements OnDestroy {
+  private readonly router = inject(Router);
+  private readonly survey = inject(SurveyService);
+  startMockSurvey(): void {
+    this.survey.startEyeTrackingDemo(FeedbackTiming.GROUP_B);
+    void this.router.navigate(['/survey']);
+  }
+
   readonly questions = [
     { code: 'D1', phase: 'DETECCION', text: 'A headline claims that all online articles have been independently verified. True or false?' },
     { code: 'D2', phase: 'DETECCION', text: 'A fictional headline states that scientists found a new moon. True or false?' },
@@ -80,7 +90,7 @@ export class EyeTrackingLabComponent implements OnDestroy {
     this.started = performance.now();
   }
   answer(score: number) {
-    if (!this.active() || !this.question) return;
+    if (!this.question) return;
     this.answers.update(a => [...a, { question: this.question.code, phase: this.question.phase, score, time: new Date().toISOString() }]);
     this.active.set(false);
     if (this.index() < this.questions.length - 1) {
