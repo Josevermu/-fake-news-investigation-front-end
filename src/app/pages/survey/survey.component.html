@@ -1,5 +1,13 @@
 <section class="screen">
   <app-glass-card>
+    <aside class="eye-opt-in">
+      <p>Opcional: seguimiento ocular con cámara. Los datos permanecen en el navegador y no se envían al servidor.</p>
+      <button type="button" *ngIf="!eye.enabled()" (click)="enableEyeTracking()">Activar seguimiento ocular</button>
+      <button type="button" *ngIf="eye.enabled()" (click)="eye.pause()">Pausar cámara</button>
+      <button type="button" *ngIf="eye.enabled()" (click)="eye.exportJson()">Exportar miradas JSON</button>
+      <button type="button" *ngIf="eye.enabled()" (click)="eye.stop()">Detener cámara</button>
+      <small>{{ eye.status() }} · {{ eye.samples().length }} muestras</small>
+    </aside>
     <!-- Header: question counter + percentage -->
     <div class="survey-header">
       <span class="counter">{{ questionCounter }}</span>
