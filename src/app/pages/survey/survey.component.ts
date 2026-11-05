@@ -148,7 +148,13 @@ export class SurveyComponent implements OnInit, OnDestroy {
     const total = this.surveyService.allNewsQuestions.length;
     this.progressService.setSurveyProgress(currentIdx, total);
     const q = this.currentQuestion;
-    if (q && this.eye.enabled()) requestAnimationFrame(() => this.eye.questionStart(q.questionCode, this.isMemoryTest ? 'MEMORIA' : 'DETECCION'));
+    if (q && this.eye.enabled() && this.eye.calibrated()) {
+      requestAnimationFrame(() => {
+        this.eye.questionStart(q.questionCode, this.isMemoryTest ? 'MEMORIA' : 'DETECCION');
+        this.previewAttempts = 0;
+        this.attachCameraPreview();
+      });
+    }
   }
   ngOnDestroy(): void {
     if (this.previewRetry) clearTimeout(this.previewRetry);
