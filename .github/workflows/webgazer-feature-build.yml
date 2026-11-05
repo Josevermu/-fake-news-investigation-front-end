@@ -1,0 +1,25 @@
+name: WebGazer feature-branch build
+on:
+  push:
+    branches:
+      - feature/webgazer-eye-tracking-lab
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  angular_build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+      - name: Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Verify Angular production build
+        run: npm run build
