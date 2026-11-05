@@ -60,6 +60,11 @@
         </p>
       </div>
     </div>
+    <div class="btn-center mt-2" *ngIf="isCurrentGroupComplete()">
+      <button type="button" class="btn-primary" (click)="continueAfterGroup()">
+        {{ isLastGroup() ? 'Continuar al tutorial' : 'Continuar a las siguientes preguntas' }}
+      </button>
+    </div>
 
   </app-glass-card>
 </section>
