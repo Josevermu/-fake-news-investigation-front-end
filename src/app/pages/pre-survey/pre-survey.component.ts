@@ -28,6 +28,8 @@ export class PreSurveyComponent implements OnInit {
   /** Total number of groups (pages) of questions. */
   totalGroups = 0;
 
+  private transitionTimer?: ReturnType<typeof setTimeout>;
+
   /** Currently displayed group index (0-based). */
   currentGroupIndex: WritableSignal<number> = signal(0);
 
@@ -106,13 +108,8 @@ selectAnswer(questionCode: string, score: number): void {
     );
 
     if (this.isCurrentGroupComplete()) {
-      setTimeout(() => {
-        if (!this.isLastGroup()) {
-          this.nextGroup();
-        } else {
-          this.finish();
-        }
-      }, 500);
+      if (this.transitionTimer) clearTimeout(this.transitionTimer);
+      this.transitionTimer = setTimeout(() => this.continueAfterGroup(), 500);
     }
   }
 
@@ -122,6 +119,14 @@ selectAnswer(questionCode: string, score: number): void {
 
   isLocked(questionCode: string): boolean {
     return this.lockedCodes().has(questionCode);
+  }
+
+  continueAfterGroup(): void {
+    if (this.transitionTimer) clearTimeout(this.transitionTimer);
+    this.transitionTimer = undefined;
+    if (!this.isCurrentGroupComplete()) return;
+    if (this.isLastGroup()) this.finish();
+    else this.nextGroup();
   }
 
   /** Move to the next group of questions. */
