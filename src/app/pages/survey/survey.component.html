@@ -27,17 +27,17 @@
     <app-progress-bar [value]="progressPercent" class="mb-5"></app-progress-bar>
 
     <!-- Question image (all formats: INSTAGRAM, WHATSAPP, TEXT) -->
-    <div class="question-image-container" *ngIf="questionImagePath">
+    <div class="question-image-container" *ngIf="questionImagePath && !imageLoadFailed()">
       <img
         [src]="questionImagePath"
         [alt]="currentQuestion?.itemText"
         class="question-image"
-        (error)="$any($event.target).style.display='none'"
+        (error)="imageLoadFailed.set(true)"
       />
     </div>
 
     <!-- Question text (fallback when image is not available) -->
-    <p class="question-text" *ngIf="currentQuestion && !questionImagePath">
+    <p class="question-text" *ngIf="currentQuestion && (!questionImagePath || imageLoadFailed())">
       {{ currentQuestion.itemText }}
     </p>
 
