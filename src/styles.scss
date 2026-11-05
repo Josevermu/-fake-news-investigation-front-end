@@ -29,3 +29,10 @@ body:has(.survey-camera-preview) #webgazerVideoFeed {
     height: 110px !important;
   }
 }
+
+/* The actual camera stream is mirrored into Angular's .eye-video-preview.
+   Keep the WebGazer internal capture element present for inference but hidden. */
+body:has(.survey-camera-preview) #webgazerVideoContainer {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
