@@ -15,7 +15,7 @@
     <span>Estado: {{ eye.status() }}</span>
     <span>Predicciones: {{ eye.predictionCount() }}</span>
     <span>Muestras de mirada: {{ eye.samples().length }}</span>
-    <span>Respuestas vinculadas: {{ eye.answers().length }}</span>
+    <span>Respuestas vinculadas: {{ eye.answers.length }}</span>
   </div>
   <p *ngIf="eye.error()" role="alert">{{ eye.error() }}</p>
 </main>
