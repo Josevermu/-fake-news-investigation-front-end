@@ -10,7 +10,9 @@ type Gazer = {
   showPredictionPoints(enabled: boolean): Gazer;
   recordScreenPosition?(x: number, y: number, type: string): unknown;
 };
-interface Sample { questionCode: string; phase: string; timestamp: string; elapsedMs: number; x: number; y: number; width: number; height: number }
+interface Sample { questionCode: string; phase: string; timestamp: string; elapsedMs: number;
+  x: number; y: number; width: number; height: number; xNormalized: number; yNormalized: number;
+  area: 'news_image' | 'news_text' | 'answer_scale' | 'other' }
 interface AnswerEvent { questionCode: string; phase: string; timestamp: string; score: number }
 @Injectable({ providedIn: 'root' })
 export class EyeTrackingService {
@@ -56,9 +58,21 @@ export class EyeTrackingService {
         this.lastPoint.set({x: p.x, y: p.y});
         const q = this.active;
         if (!q) return;
+        const inside = (selector: string): boolean => {
+          const el = document.querySelector<HTMLElement>(selector);
+          if (!el) return false;
+          const r = el.getBoundingClientRect();
+          return p.x >= r.left && p.x <= r.right && p.y >= r.top && p.y <= r.bottom;
+        };
+        const area: Sample['area'] = inside('.question-image') ? 'news_image'
+          : inside('.question-text') ? 'news_text'
+          : inside('.scale-container') ? 'answer_scale' : 'other';
+        const width = Math.max(window.innerWidth, 1);
+        const height = Math.max(window.innerHeight, 1);
         this.samples.update(s => [...s, { questionCode: q.questionCode, phase: q.phase,
           timestamp: new Date().toISOString(), elapsedMs: Math.round(now - q.start),
-          x: p.x, y: p.y, width: window.innerWidth, height: window.innerHeight }]);
+          x: p.x, y: p.y, width, height, xNormalized: p.x / width,
+          yNormalized: p.y / height, area }]);
       });
       await api.begin();
       this.enabled.set(true);
@@ -113,9 +127,16 @@ export class EyeTrackingService {
     }
     const summary = Object.values(this.samples().reduce((groups, s) => {
       const key = s.phase + ':' + s.questionCode;
-      const item = groups[key] ?? { phase: s.phase, questionCode: s.questionCode, count: 0 };
-      item.count += 1; groups[key] = item; return groups;
-    }, {} as Record<string, {phase: string; questionCode: string; count: number}>));
+      const item = groups[key] ?? { phase: s.phase, questionCode: s.questionCode, count: 0,
+        newsImage: 0, newsText: 0, answerScale: 0, other: 0 };
+      item.count += 1;
+      if (s.area === 'news_image') item.newsImage += 1;
+      else if (s.area === 'news_text') item.newsText += 1;
+      else if (s.area === 'answer_scale') item.answerScale += 1;
+      else item.other += 1;
+      groups[key] = item; return groups;
+    }, {} as Record<string, {phase: string; questionCode: string; count: number;
+      newsImage: number; newsText: number; answerScale: number; other: number}>));
     const data = JSON.stringify({ schemaVersion: 2, samples: this.samples(), answers: this.answers(),
       summary, predictionCount: this.predictionCount(), localOnly: true }, null, 2);
     const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
