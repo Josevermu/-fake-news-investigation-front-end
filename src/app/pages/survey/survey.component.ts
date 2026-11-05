@@ -137,22 +137,29 @@ export class SurveyComponent implements OnInit, OnDestroy {
   }
   ngOnDestroy(): void { this.eye.pause(); }
 
+  calibrateEye(event: MouseEvent): void {
+    this.eye.calibrate(event.clientX, event.clientY);
+    if (this.eye.calibrated()) {
+      const q = this.currentQuestion;
+      if (q) this.eye.questionStart(q.questionCode, this.isMemoryTest ? 'MEMORIA' : 'DETECCION');
+    }
+  }
+
   async enableEyeTracking(): Promise<void> {
     try {
       await this.eye.enable();
       const q = this.currentQuestion;
-      if (q) this.eye.questionStart(q.questionCode, this.isMemoryTest ? 'MEMORIA' : 'DETECCION');
+      // Recording begins after the nine-point calibration, not before.
     } catch (err) { console.warn('Eye tracking unavailable:', err); }
   }
 
   selectScale(value: number): void {
-    if (this.showingFeedback() || this.selectionLocked()) return;
-
-    this.selectedValue.set(value);
-    this.selectionLocked.set(true);
+    if (this.showingFeedback() || this.selectionLocked() || this.eye.enabled() && !this.eye.calibrated()) return;
 
     const question = this.currentQuestion;
     if (!question) return;
+    this.selectedValue.set(value);
+    this.selectionLocked.set(true);
 
     const answerType = this.isMemoryTest ? AnswerType.MEMORY_TEST : AnswerType.FAKE_DETECTION;
 
