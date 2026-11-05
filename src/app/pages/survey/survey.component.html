@@ -2,7 +2,9 @@
   <aside class="survey-camera-preview" *ngIf="surveyService.isEyeTrackingDemo() || eye.enabled()">
     <strong>Vista de cámara · WebGazer</strong>
     <p>La cámara y los puntos de seguimiento aparecerán aquí al activarla.</p>
-    <p>Estado: {{ eye.status() }} · {{ eye.samples().length }} muestras</p>
+    <p>Estado: {{ eye.status() }} · {{ eye.samples().length }} muestras · {{ eye.predictionCount() }} predicciones</p>
+    <p *ngIf="eye.lastPoint() as point">Mirada: X {{ point.x | number:'1.0-0' }}, Y {{ point.y | number:'1.0-0' }}</p>
+    <p *ngIf="eye.error()" role="alert">{{ eye.error() }}</p>
   </aside>
   <app-glass-card>
     <aside class="eye-opt-in">
@@ -13,6 +15,7 @@
       <small>{{ eye.status() }} · {{ eye.samples().length }} muestras</small>
     </aside>
     <p *ngIf="surveyService.isEyeTrackingDemo()" class="mock-banner">MODO MOCK · Preguntas simuladas · Sin llamadas a la API</p>
+    <p *ngIf="eye.enabled() && !eye.calibrated()">Calibración necesaria antes de registrar miradas.</p>
     <!-- Header: question counter + percentage -->
     <div class="survey-header">
       <span class="counter">{{ questionCounter }}</span>
@@ -82,4 +85,15 @@
 
   <!-- Loading overlay when saving -->
   <app-loading *ngIf="isSaving()" />
+  <div class="gaze-calibration" *ngIf="eye.enabled() && !eye.calibrated()">
+    <div class="gaze-calibration-instructions">
+      <h2>Calibración de mirada</h2>
+      <p>Mira el punto amarillo y haz clic 3 veces. Repite en los 9 puntos.</p>
+      <strong>Punto {{ eye.calibrationIndex() + 1 }} de 9 · clic {{ eye.calibrationClicks() + 1 }} de 3</strong>
+    </div>
+    <button class="gaze-calibration-target" type="button"
+      [style.left.%]="eye.calibrationPositions[eye.calibrationIndex()][0]"
+      [style.top.%]="eye.calibrationPositions[eye.calibrationIndex()][1]"
+      (click)="calibrateEye($event)" aria-label="Punto de calibración"></button>
+  </div>
 </section>
