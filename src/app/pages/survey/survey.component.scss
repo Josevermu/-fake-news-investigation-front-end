@@ -264,3 +264,54 @@
 .survey-camera-preview p{font-size:12px;margin:10px 0 0;color:#ded6ea}
 @media(min-width:1450px){.screen:has(.survey-camera-preview){padding-right:270px}}
 @media(max-width:900px){.survey-camera-preview{position:relative;top:auto;right:auto;order:-1;width:min(100%,320px);min-height:220px;margin:0 auto 14px}}
+
+.eye-video-preview {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin-top: 10px;
+  background: #080a13;
+  border-radius: 10px;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+.gaze-calibration {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(10, 10, 22, .91);
+  overflow: hidden;
+}
+.gaze-calibration-instructions {
+  position: absolute;
+  top: 28%;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 480px;
+  width: 65%;
+  padding: 18px;
+  text-align: center;
+  border-radius: 14px;
+  color: #fff;
+  background: #20203a;
+  pointer-events: none;
+}
+.gaze-calibration-instructions h2 { font-size: 22px; margin: 0 0 6px; }
+.gaze-calibration-instructions p { font-size: 15px; margin: 0 0 8px; }
+.gaze-calibration-target {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  height: 45px;
+  width: 45px;
+  border: 7px solid #ffcc46;
+  border-radius: 50%;
+  background: #392412;
+  box-shadow: 0 0 0 10px rgba(255, 190, 40, .16);
+  cursor: pointer;
+  z-index: 10001;
+}
+.gaze-calibration-target:focus-visible { outline: 3px solid white; }
+@media(max-width:900px) {
+  .survey-camera-preview { min-height: 0; }
+  .gaze-calibration-instructions { top: 32%; width: 65%; }
+}
