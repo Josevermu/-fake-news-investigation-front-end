@@ -35,14 +35,19 @@ export class SurveyComponent implements OnInit, OnDestroy {
 
   @ViewChild(ToastComponent) toast!: ToastComponent;
   @ViewChild('cameraPreview') cameraPreview?: ElementRef<HTMLVideoElement>;
+  @ViewChild('calibrationPreview') calibrationPreview?: ElementRef<HTMLVideoElement>;
   private previewRetry?: ReturnType<typeof setTimeout>;
   private previewAttempts = 0;
   private attachCameraPreview(): void {
-    const node = this.cameraPreview?.nativeElement;
+    const nodes = [this.cameraPreview?.nativeElement, this.calibrationPreview?.nativeElement].filter(
+      (item): item is HTMLVideoElement => !!item
+    );
     const stream = this.eye.getVideoStream();
-    if (node && stream) {
-      node.srcObject = stream;
-      void node.play().catch(() => {});
+    if (nodes.length && stream) {
+      for (const node of nodes) {
+        node.srcObject = stream;
+        void node.play().catch(() => {});
+      }
       return;
     }
     if (this.eye.enabled() && ++this.previewAttempts < 16) {
@@ -159,6 +164,7 @@ export class SurveyComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.previewRetry) clearTimeout(this.previewRetry);
     if (this.cameraPreview?.nativeElement) this.cameraPreview.nativeElement.srcObject = null;
+    if (this.calibrationPreview?.nativeElement) this.calibrationPreview.nativeElement.srcObject = null;
     this.eye.pause();
   }
 
