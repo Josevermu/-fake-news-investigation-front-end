@@ -6,7 +6,7 @@ import { GlassCardComponent } from '@shared/components/glass-card/glass-card.com
 import { LoadingComponent } from '@shared/components/loading/loading.component';
 import { SurveyService } from '@services/survey/survey.service';
 import { ProgressService } from '@services/common/progress.service';
-import { ParticipantRequest, Sex } from '@models/survey.interface';
+import { ParticipantRequest, Sex, FeedbackTiming } from '@models/survey.interface';
 
 @Component({
   selector: 'app-welcome',
@@ -105,6 +105,12 @@ export class WelcomeComponent implements OnInit {
     this.errorMessage.set(
       'Es necesario aceptar el consentimiento para participar en el estudio.'
     );
+  }
+
+  /** Local QA only: identical route flow without backend registration. */
+  startEyeTrackingMock(): void {
+    this.surveyService.startEyeTrackingDemo(FeedbackTiming.GROUP_B);
+    this.router.navigate(['/pre-survey-intro']);
   }
 
   submitRegistration(): void {
