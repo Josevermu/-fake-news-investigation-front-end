@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, ViewChild, WritableSignal, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, ViewChild, ElementRef, WritableSignal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { GlassCardComponent } from '@shared/components/glass-card/glass-card.component';
@@ -34,6 +34,21 @@ export class SurveyComponent implements OnInit, OnDestroy {
   private readonly cdr = inject(ChangeDetectorRef);
 
   @ViewChild(ToastComponent) toast!: ToastComponent;
+  @ViewChild('cameraPreview') cameraPreview?: ElementRef<HTMLVideoElement>;
+  private previewRetry?: ReturnType<typeof setTimeout>;
+  private previewAttempts = 0;
+  private attachCameraPreview(): void {
+    const node = this.cameraPreview?.nativeElement;
+    const stream = this.eye.getVideoStream();
+    if (node && stream) {
+      node.srcObject = stream;
+      void node.play().catch(() => {});
+      return;
+    }
+    if (this.eye.enabled() && ++this.previewAttempts < 16) {
+      this.previewRetry = setTimeout(() => this.attachCameraPreview(), 250);
+    }
+  }
 
   /** Scale values for EXP1 and EXP2 (-10 to 10, 21 buttons). */
   readonly memoryTestScale = MEMORY_TEST_SCALE;
@@ -135,7 +150,11 @@ export class SurveyComponent implements OnInit, OnDestroy {
     const q = this.currentQuestion;
     if (q && this.eye.enabled()) requestAnimationFrame(() => this.eye.questionStart(q.questionCode, this.isMemoryTest ? 'MEMORIA' : 'DETECCION'));
   }
-  ngOnDestroy(): void { this.eye.pause(); }
+  ngOnDestroy(): void {
+    if (this.previewRetry) clearTimeout(this.previewRetry);
+    if (this.cameraPreview?.nativeElement) this.cameraPreview.nativeElement.srcObject = null;
+    this.eye.pause();
+  }
 
   calibrateEye(event: MouseEvent): void {
     this.eye.calibrate(event.clientX, event.clientY);
@@ -148,6 +167,8 @@ export class SurveyComponent implements OnInit, OnDestroy {
   async enableEyeTracking(): Promise<void> {
     try {
       await this.eye.enable();
+      this.previewAttempts = 0;
+      this.attachCameraPreview();
       const q = this.currentQuestion;
       // Recording begins after the nine-point calibration, not before.
     } catch (err) { console.warn('Eye tracking unavailable:', err); }
