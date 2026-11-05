@@ -116,6 +116,14 @@ export class EyeTrackingService {
     this.engine = undefined;
     this.status.set('off');
   }
+  /** Reset only locally collected gaze events; do not touch the research database. */
+  clear(): void {
+    this.samples.set([]);
+    this.answers.set([]);
+    this.predictionCount.set(0);
+    this.lastPoint.set(null);
+    this.error.set('');
+  }
   getVideoStream(): MediaStream | null {
     const video = document.getElementById('webgazerVideoFeed') as HTMLVideoElement | null;
     return video?.srcObject instanceof MediaStream ? video.srcObject : null;
