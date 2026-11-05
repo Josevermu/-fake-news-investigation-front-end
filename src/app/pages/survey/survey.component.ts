@@ -80,6 +80,8 @@ export class SurveyComponent implements OnInit, OnDestroy {
   /** Currently selected value (null = none selected). */
   selectedValue: WritableSignal<number | null> = signal(null);
 
+  imageLoadFailed = signal(false);
+
   /** Whether the selection is locked (user already chose a value). */
   selectionLocked: WritableSignal<boolean> = signal(false);
 
@@ -236,6 +238,7 @@ export class SurveyComponent implements OnInit, OnDestroy {
 
     setTimeout(() => {
       // Reset only after delay
+      this.imageLoadFailed.set(false);
       this.selectedValue.set(null);
       this.selectionLocked.set(false);
       this.showingFeedback.set(false);
