@@ -315,3 +315,25 @@
   .survey-camera-preview { min-height: 0; }
   .gaze-calibration-instructions { top: 32%; width: 65%; }
 }
+
+.calibration-video {
+  display: block;
+  width: 132px;
+  height: 96px;
+  object-fit: cover;
+  transform: scaleX(-1);
+  background: #090a12;
+  border-radius: 10px;
+  margin: 8px auto;
+}
+.cancel-calibration {
+  pointer-events: auto;
+  display: block;
+  margin: 10px auto 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #deb05a;
+  color: #fff;
+  background: #39304c;
+  cursor: pointer;
+}
