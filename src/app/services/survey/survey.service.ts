@@ -132,7 +132,11 @@ export class SurveyService {
       feedbackTiming,
       presentationFormat: PresentationFormat.TEXT,
       newsSet: NewsSet.TECHNOLOGY,
-      profileQuestions: [],
+      profileQuestions: Array.from({ length: 18 }, (_, i) => ({
+        ...create('P' + (i + 1), i + 1, 'Ítem de perfil simulado ' + (i + 1) + ': evalúa tu percepción de la información.', null),
+        questionType: QuestionType.PROFILE,
+        scaleOptions: 'nada,poco,bastante,mucho',
+      })),
       newsPart1Questions: part1,
       newsPart2Questions: part2,
     };
