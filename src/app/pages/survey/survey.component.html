@@ -91,6 +91,9 @@
       <h2>Calibración de mirada</h2>
       <p>Mira el punto amarillo y haz clic 3 veces. Repite en los 9 puntos.</p>
       <strong>Punto {{ eye.calibrationIndex() + 1 }} de 9 · clic {{ eye.calibrationClicks() + 1 }} de 3</strong>
+      <video #calibrationPreview class="calibration-video" autoplay muted playsinline aria-label="Vista previa de la cámara"></video>
+      <small>Predicciones: {{ eye.predictionCount() }} · Mantén tu rostro visible y la pantalla fija.</small>
+      <button type="button" class="cancel-calibration" (click)="eye.stop()">Cancelar cámara y continuar sin seguimiento</button>
     </div>
     <button class="gaze-calibration-target" type="button"
       [style.left.%]="eye.calibrationPositions[eye.calibrationIndex()][0]"
