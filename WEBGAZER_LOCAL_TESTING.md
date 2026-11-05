@@ -1,36 +1,31 @@
-# WebGazer experimental branch
+# WebGazer: local QA instructions
 
-This branch is **not** deployed to production. It loads WebGazer from https://webgazer.cs.brown.edu/webgazer.js when the tester explicitly opts in. WebGazer estimates gaze using webcam video locally.
+Branch: `feature/webgazer-eye-tracking-lab`. This branch is not deployed to Azure production.
 
-## Test without backend
+## Test without a backend
 
-1. Checkout `feature/webgazer-eye-tracking-lab`.
-2. Run `npm ci`, then `npm start`.
-3. Open `http://localhost:4200/eye-tracking-lab`.
-4. Click **Start camera**, allow webcam access, ensure the prediction dot moves, and look/click across the page to help calibrate.
-5. Answer the four mock questions (DETECCION then MEMORIA). The active question and phase are stored on every gaze sample. Sample rate is capped around 10/sec and 30,000 samples.
-6. Export JSON. Verify `samples[]` entries have coordinates, timestamps, elapsedMs and a matching question/phase, and that `answers[]` has four scores.
-7. Use **Stop** to release the webcam. Reload to reset test data.
+1. `npm ci && npm start`.
+2. Open `http://localhost:4200/eye-tracking-lab`.
+3. Select Grupo A or Grupo B. This creates an in-memory backend-shaped experiment session.
+4. Alternatively, open `/welcome` and click **PRUEBA LOCAL: recorrido completo sin backend** to test PROFILE, both tutorials, DETECCION and MEMORIA.
+5. On `/survey`, click **Activar seguimiento ocular**. Permit the camera.
+6. In the nine-point calibration overlay, look at the yellow point and click it **three times**. Repeat all nine positions. Keep face illuminated and stable.
+7. Verify camera video is visible, `predicciones` increases, and `muestras` increases while looking at the question. Gaze values should vary with eye movement.
+8. Answer questions and go through the break to MEMORIA. At completion click **Exportar miradas JSON**.
+9. Inspect `samples[]`: there should be many coordinate samples per question, with timestamp, elapsedMs, x/y, normalized coordinates and area. `answers[]` contains scores; `summary[]` counts samples per question and area.
+10. Export is blocked with a useful diagnostic if there are zero gaze samples; an answer-only JSON is not considered a valid gaze recording.
 
-## Real survey test
+## Data boundaries
 
-Use the usual backend-driven NEWS survey locally and opt in using **Activar seguimiento ocular**. Gaze samples begin for the visible question once WebGazer initializes, stop on answer, resume on the next question, and pause on the break/tutorial. The completion page includes **Exportar miradas (JSON)** if gaze samples exist.
+This demo never calls the protected register, submitBatch, or reward API. Webcam frames remain inside WebGazer. Gaze estimates and answers remain in memory until manually downloaded. No persistence endpoint is implemented for eye data. Do not infer true fixations from raw predictions without preprocessing and validation.
 
-## Privacy and limitations
+## Troubleshooting
 
-- Camera permission is mandatory. localhost or HTTPS and a supported desktop browser are required.
-- No image/video frames or face images are exported; gaze samples remain only in memory until manually downloaded.
-- This branch does **not** introduce a backend gaze endpoint or upload eye tracking data.
-- Gaze coordinates are **estimates**, not validated fixations or clinical-grade eye tracking. Accuracy requires calibration and testing against known on-screen targets.
-- WebGazer currently uses the library site's script URL at runtime. Before a reproducible study, pin and self-host an audited release; do not depend on a mutable third-party script for production.
-- Do not test with real research participants before updating study consent and data handling procedures.
+- Use desktop Chrome or Edge, localhost or HTTPS, and allow webcam in operating system and browser.
+- Confirm the WebGazer script URL is reachable; disable any blocker that prevents that script (only in your controlled test).
+- If camera is visible but no predictions appear, check face illumination, position, WebGL availability, and the browser console.
+- No camera? Click **Cancelar cámara y continuar sin seguimiento** from the calibration overlay. Questions should remain answerable, but no eye-tracking dataset will exist.
+- Refreshing destroys the in-memory experiment session; restart the mock flow.
+- WebGazer is a webcam gaze **estimation** library, not a calibrated clinical-grade eye tracker.
 
-## Updated: full survey mock flow
-
-Open `http://localhost:4200/eye-tracking-lab` and click **Abrir cuestionario MOCK (sin API)**. This builds an in-memory `ExperimentSession` with 4 detection and 4 memory questions and routes to `/survey`. It never calls the registration or answer-submission endpoints, and the mock participant ID is used only locally.
-
-On `/survey`, choose **Activar seguimiento ocular** and allow webcam access. The right-hand preview panel shows camera status, while the WebGazer video is positioned alongside it. Continue answering the mock questions. At completion, export the gaze JSON.
-
-Alternatively, remain on the isolated lab route to answer mock questions without camera permission (gaze samples will be empty until the camera is started). Camera access is not required to progress through mock questions.
-
-Desktop browser + localhost is recommended. The WebGazer default video DOM container may differ by library version; if the camera isn't visible, inspect `#webgazerVideoContainer` and `#webgazerVideoFeed`. If camera fails, check devtools console and OS/browser camera permissions.
+WebGazer documentation: https://webgazer.cs.brown.edu/
