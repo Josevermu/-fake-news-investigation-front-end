@@ -1,6 +1,7 @@
 <section class="screen" [class.eye-demo-screen]="surveyService.isEyeTrackingDemo()">
   <aside class="survey-camera-preview" *ngIf="surveyService.isEyeTrackingDemo() || eye.enabled()">
     <strong>Vista de cámara · WebGazer</strong>
+    <video #cameraPreview class="eye-video-preview" autoplay muted playsinline aria-label="Vista previa de webcam en tiempo real"></video>
     <p>La cámara y los puntos de seguimiento aparecerán aquí al activarla.</p>
     <p>Estado: {{ eye.status() }} · {{ eye.samples().length }} muestras · {{ eye.predictionCount() }} predicciones</p>
     <p *ngIf="eye.lastPoint() as point">Mirada: X {{ point.x | number:'1.0-0' }}, Y {{ point.y | number:'1.0-0' }}</p>
