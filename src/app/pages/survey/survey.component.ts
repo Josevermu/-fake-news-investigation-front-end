@@ -157,7 +157,7 @@ export class SurveyComponent implements OnInit, OnDestroy {
     const q = this.currentQuestion;
     if (q && this.eye.enabled() && this.eye.calibrated()) {
       requestAnimationFrame(() => {
-        this.eye.questionStart(q.questionCode, this.isMemoryTest ? 'MEMORIA' : 'DETECCION');
+        this.eye.questionStart(q.questionCode, this.isMemoryTest ? 'MEMORIA' : 'DETECCION', this.surveyService.currentQuestionIndex());
         this.previewAttempts = 0;
         this.attachCameraPreview();
       });
@@ -183,13 +183,12 @@ export class SurveyComponent implements OnInit, OnDestroy {
       await this.eye.enable();
       this.previewAttempts = 0;
       this.attachCameraPreview();
-      const q = this.currentQuestion;
       // Recording begins after the nine-point calibration, not before.
     } catch (err) { console.warn('Eye tracking unavailable:', err); }
   }
 
   selectScale(value: number): void {
-    if (this.showingFeedback() || this.selectionLocked() || this.eye.enabled() && !this.eye.calibrated()) return;
+    if (this.showingFeedback() || this.selectionLocked() || (this.eye.enabled() && !this.eye.calibrated())) return;
 
     const question = this.currentQuestion;
     if (!question) return;
@@ -254,7 +253,7 @@ export class SurveyComponent implements OnInit, OnDestroy {
       try { this.cdr.detectChanges(); } catch { /* no-op */ }
       if (hasMore && !(wasInPhase1 && this.surveyService.isCurrentlyInPhase2)) {
         const next = this.currentQuestion;
-        if (next) requestAnimationFrame(() => this.eye.questionStart(next.questionCode, this.isMemoryTest ? 'MEMORIA' : 'DETECCION'));
+        if (next) requestAnimationFrame(() => this.eye.questionStart(next.questionCode, this.isMemoryTest ? 'MEMORIA' : 'DETECCION', this.surveyService.currentQuestionIndex()));
       }
       if (!hasMore) {
           // All questions answered — submit batch to backend
