@@ -29,3 +29,18 @@ This demo never calls the protected register, submitBatch, or reward API. Webcam
 - WebGazer is a webcam gaze **estimation** library, not a calibrated clinical-grade eye tracker.
 
 WebGazer documentation: https://webgazer.cs.brown.edu/
+
+## Versioned WebGazer and visual validation
+
+The feature branch loads the pinned `webgazer@3.5.3/dist/webgazer.min.js` script rather than an unversioned source. Do a full browser refresh after pulling changes.
+
+While actively answering a NEWS question **after calibration**, a yellow dot should follow estimated gaze position above the content. The camera panel must show all of the following:
+- `predicciones` increases whenever the tracker returns valid X/Y estimates
+- `Registrando MOCK_D1 ... N muestras de esta pregunta` increases only for the active question
+- `Mirada: X ..., Y ...` changes as the estimated gaze changes
+- `lecturas nulas` helps distinguish face-tracker failures from export problems
+- an error will include the failing startup stage (loading-script, configuring, begin, camera-preview) and an expandable stack trace
+
+Export `schemaVersion: 3` includes `samples[]` with `trialIndex`, phase, question code, timestamp, elapsed milliseconds, X/Y and normalized viewport coordinates, plus the area of interest. `answers[]` includes per-answer response time, sample count and the last predicted X/Y. If no valid gaze samples exist, no JSON is exported.
+
+The original `t is not a function` problem appeared during WebGazer initialization on an unversioned browser-loaded library. The branch now uses an explicit version and reports the failing stage. The Angular CI build does **not** validate webcam inference on a real machine. If you still see the error after pulling, expand `Detalles técnicos del error` and provide the stage/stack.
