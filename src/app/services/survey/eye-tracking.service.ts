@@ -65,14 +65,16 @@ export class EyeTrackingService {
         throw new Error('La versión de WebGazer no expone begin() o setGazeListener().');
       }
       if (typeof api.saveDataAcrossSessions === 'function') api.saveDataAcrossSessions(false);
-      if (typeof api.showVideo === 'function') api.showVideo(true);
-      if (typeof api.showFaceOverlay === 'function') api.showFaceOverlay(false);
-      if (typeof api.showPredictionPoints === 'function') api.showPredictionPoints(false); // Use a custom visible dot.
+      // Configure the listener first; preview DOM may not exist until begin().
       api.setGazeListener(p => {
         this.zone.run(() => this.receivePrediction(p));
       });
       this.stage.set('begin');
       await api.begin();
+      this.stage.set('camera-preview');
+      if (typeof api.showVideo === 'function') api.showVideo(true);
+      if (typeof api.showFaceOverlay === 'function') api.showFaceOverlay(false);
+      if (typeof api.showPredictionPoints === 'function') api.showPredictionPoints(false);
       this.enabled.set(true);
       this.stage.set('calibrating');
       this.status.set('Calibrando · 9 puntos');
