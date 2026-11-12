@@ -12,6 +12,7 @@ type Gazer = {
   getCurrentPrediction?(): GazePoint | null;
   clearGazeListener?(): Gazer;
   showFaceOverlay?(enabled: boolean): Gazer;
+  params?: { faceMeshSolutionPath: string };
 };
 interface Sample { questionCode: string; phase: string; trialIndex: number; timestamp: string; elapsedMs: number;
   x: number; y: number; width: number; height: number; xNormalized: number; yNormalized: number;
@@ -38,7 +39,8 @@ export class EyeTrackingService {
   readonly nullPredictions = signal(0);
   readonly predictionVisible = signal(false);
   readonly lastErrorStack = signal('');
-  private readonly libraryUrl = 'https://cdn.jsdelivr.net/npm/webgazer@3.5.3/dist/webgazer.min.js';
+  private readonly assetRoot = 'https://cdn.jsdelivr.net/npm/webgazer@3.5.3/dist';
+  private readonly libraryUrl = this.assetRoot + '/webgazer.js';
   readonly calibrationPositions = [
     [15, 15], [50, 15], [85, 15],
     [15, 50], [50, 50], [85, 50],
@@ -60,6 +62,18 @@ export class EyeTrackingService {
     try {
       const api = await this.load();
       this.engine = api;
+      this.stage.set('configuring-mediapipe');
+      if (!api.params || typeof api.params !== 'object') {
+        throw new Error('WebGazer no expone params: no se puede configurar MediaPipe.');
+      }
+      // WebGazer defaults to ./mediapipe/face_mesh. In Angular that path is
+      // NOT present under localhost:4200, so the face model cannot initialize.
+      api.params.faceMeshSolutionPath = this.assetRoot + '/mediapipe/face_mesh';
+      this.stage.set('checking-face-model-assets');
+      const modelResponse = await fetch(api.params.faceMeshSolutionPath + '/face_mesh.js', { cache: 'force-cache' });
+      if (!modelResponse.ok) {
+        throw new Error('No se encontró face_mesh.js (' + modelResponse.status + ') en ' + api.params.faceMeshSolutionPath);
+      }
       this.stage.set('configuring');
       if (typeof api.setGazeListener !== 'function' || typeof api.begin !== 'function') {
         throw new Error('La versión de WebGazer no expone begin() o setGazeListener().');
@@ -88,6 +102,9 @@ export class EyeTrackingService {
       this.status.set('Error en ' + this.stage() + ': ' + msg);
       this.error.set(this.status());
       this.enabled.set(false);
+      // getUserMedia may have succeeded even when MediaPipe initialization failed.
+      // Release the webcam before removing WebGazer elements.
+      this.getVideoStream()?.getTracks().forEach(track => track.stop());
       try { await this.engine?.end(); } catch { /* Cleanup best effort */ }
       this.engine = undefined;
       throw e;
