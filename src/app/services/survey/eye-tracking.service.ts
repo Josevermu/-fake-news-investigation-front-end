@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, NgZone, inject, signal } from '@angular/core';
 
 type GazePoint = { x: number; y: number };
 type Gazer = {
@@ -9,15 +9,20 @@ type Gazer = {
   showVideo(enabled: boolean): Gazer;
   showPredictionPoints(enabled: boolean): Gazer;
   recordScreenPosition?(x: number, y: number, type: string): unknown;
+  getCurrentPrediction?(): GazePoint | null;
+  clearGazeListener?(): Gazer;
+  showFaceOverlay?(enabled: boolean): Gazer;
 };
-interface Sample { questionCode: string; phase: string; timestamp: string; elapsedMs: number;
+interface Sample { questionCode: string; phase: string; trialIndex: number; timestamp: string; elapsedMs: number;
   x: number; y: number; width: number; height: number; xNormalized: number; yNormalized: number;
   area: 'news_image' | 'news_text' | 'answer_scale' | 'other' }
-interface AnswerEvent { questionCode: string; phase: string; timestamp: string; score: number }
+interface AnswerEvent { questionCode: string; phase: string; trialIndex: number; timestamp: string; score: number;
+  responseTimeMs: number; gazeSamples: number; gazeXAtAnswer: number | null; gazeYAtAnswer: number | null }
 @Injectable({ providedIn: 'root' })
 export class EyeTrackingService {
+  private readonly zone = inject(NgZone);
   private engine?: Gazer;
-  private active?: { questionCode: string; phase: string; start: number };
+  private active?: { questionCode: string; phase: string; trialIndex: number; start: number; samplesAtStart: number };
   private last = 0;
   readonly enabled = signal(false);
   readonly status = signal('off');
@@ -29,6 +34,11 @@ export class EyeTrackingService {
   readonly calibrationIndex = signal(0);
   readonly calibrationClicks = signal(0);
   readonly error = signal('');
+  readonly stage = signal('idle');
+  readonly nullPredictions = signal(0);
+  readonly predictionVisible = signal(false);
+  readonly lastErrorStack = signal('');
+  private readonly libraryUrl = 'https://cdn.jsdelivr.net/npm/webgazer@3.5.3/dist/webgazer.min.js';
   readonly calibrationPositions = [
     [15, 15], [50, 15], [85, 15],
     [15, 50], [50, 50], [85, 50],
@@ -40,20 +50,57 @@ export class EyeTrackingService {
   async enable(): Promise<void> {
     if (this.enabled()) return;
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) throw new Error('Camera requires localhost or HTTPS');
-    this.status.set('loading');
+    this.status.set('Iniciando seguimiento ocular...');
+    this.stage.set('loading-script');
     this.error.set('');
+    this.lastErrorStack.set('');
     try {
       const api = await this.load();
       this.engine = api;
-      api.saveDataAcrossSessions(false);
-      api.showVideo(true);
-      api.showPredictionPoints(true);
+      this.stage.set('configuring');
+      if (typeof api.setGazeListener !== 'function' || typeof api.begin !== 'function') {
+        throw new Error('La versión de WebGazer no expone begin() o setGazeListener().');
+      }
+      if (typeof api.saveDataAcrossSessions === 'function') api.saveDataAcrossSessions(false);
+      if (typeof api.showVideo === 'function') api.showVideo(true);
+      if (typeof api.showFaceOverlay === 'function') api.showFaceOverlay(false);
+      if (typeof api.showPredictionPoints === 'function') api.showPredictionPoints(false); // Use a custom visible dot.
       api.setGazeListener(p => {
-        if (!p || !this.enabled() || document.hidden) return;
+        this.zone.run(() => this.receivePrediction(p));
+      });
+      this.stage.set('begin');
+      await api.begin();
+      this.enabled.set(true);
+      this.stage.set('calibrating');
+      this.status.set('Calibrando · 9 puntos');
+      this.calibrated.set(false);
+      this.calibrationIndex.set(0);
+      this.calibrationClicks.set(0);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      this.lastErrorStack.set(e instanceof Error ? (e.stack || '') : '');
+      console.error('[WebGazer] Falló en etapa ' + this.stage(), e);
+      this.status.set('Error en ' + this.stage() + ': ' + msg);
+      this.error.set(this.status());
+      this.enabled.set(false);
+      try { await this.engine?.end(); } catch { /* Cleanup best effort */ }
+      this.engine = undefined;
+      throw e;
+    }
+  }
+
+  private receivePrediction(p: GazePoint | null): void {
+        if (!p || !Number.isFinite(p.x) || !Number.isFinite(p.y)) {
+          this.nullPredictions.update(n => n + 1);
+          this.predictionVisible.set(false);
+          return;
+        }
+        if (document.hidden) return;
         if (!Number.isFinite(p.x) || !Number.isFinite(p.y)) return;
         const now = performance.now();
         if (now - this.last < 100 || this.samples().length >= 30000) return;
         this.last = now;
+        this.predictionVisible.set(true);
         this.predictionCount.update(n => n + 1);
         this.lastPoint.set({x: p.x, y: p.y});
         const q = this.active;
@@ -70,21 +117,11 @@ export class EyeTrackingService {
         const width = Math.max(window.innerWidth, 1);
         const height = Math.max(window.innerHeight, 1);
         this.samples.update(s => [...s, { questionCode: q.questionCode, phase: q.phase,
+          trialIndex: q.trialIndex,
           timestamp: new Date().toISOString(), elapsedMs: Math.round(now - q.start),
           x: p.x, y: p.y, width, height, xNormalized: p.x / width,
           yNormalized: p.y / height, area }]);
-      });
-      await api.begin();
-      this.enabled.set(true);
-      this.status.set('calibrating');
-      this.calibrated.set(false);
-      this.calibrationIndex.set(0);
-      this.calibrationClicks.set(0);
-    } catch (e) {
-      this.status.set(e instanceof Error ? e.message : 'Eye tracking unavailable');
-      this.error.set(this.status());
-      throw e;
-    }
+
   }
   calibrate(x: number, y: number): void {
     if (!this.enabled() || this.calibrated()) return;
@@ -97,18 +134,28 @@ export class EyeTrackingService {
     this.status.set('calibrated');
     this.engine?.pause();
   }
-  questionStart(questionCode: string, phase: string): void {
+  questionStart(questionCode: string, phase: string, trialIndex = 0): void {
     if (!this.enabled() || !this.calibrated()) return;
-    this.active = { questionCode, phase, start: performance.now() };
+    this.active = { questionCode, phase, trialIndex, start: performance.now(), samplesAtStart: this.samples().length };
     this.engine?.resume();
   }
   answer(score: number): void {
     if (!this.active) return;
-    this.answers.update(a => [...a, { questionCode: this.active!.questionCode,
-      phase: this.active!.phase, timestamp: new Date().toISOString(), score }]);
+    const trial = this.active;
+    const p = this.lastPoint();
+    this.answers.update(a => [...a, { questionCode: trial.questionCode,
+      phase: trial.phase, trialIndex: trial.trialIndex,
+      timestamp: new Date().toISOString(), score,
+      responseTimeMs: Math.round(performance.now() - trial.start),
+      gazeSamples: this.samples().length - trial.samplesAtStart,
+      gazeXAtAnswer: p?.x ?? null, gazeYAtAnswer: p?.y ?? null }]);
     this.pause();
   }
-  pause(): void { this.active = undefined; this.engine?.pause(); }
+  pause(): void {
+    this.active = undefined;
+    this.predictionVisible.set(false);
+    this.engine?.pause();
+  }
   async stop(): Promise<void> {
     this.pause();
     this.enabled.set(false);
@@ -122,6 +169,8 @@ export class EyeTrackingService {
     this.answers.set([]);
     this.predictionCount.set(0);
     this.lastPoint.set(null);
+    this.nullPredictions.set(0);
+    this.predictionVisible.set(false);
     this.error.set('');
   }
   getVideoStream(): MediaStream | null {
@@ -145,8 +194,10 @@ export class EyeTrackingService {
       groups[key] = item; return groups;
     }, {} as Record<string, {phase: string; questionCode: string; count: number;
       newsImage: number; newsText: number; answerScale: number; other: number}>));
-    const data = JSON.stringify({ schemaVersion: 2, samples: this.samples(), answers: this.answers(),
-      summary, predictionCount: this.predictionCount(), localOnly: true }, null, 2);
+    const data = JSON.stringify({ schemaVersion: 3, library: 'webgazer@3.5.3',
+      collectedAt: new Date().toISOString(), samples: this.samples(), answers: this.answers(),
+      summary, predictionCount: this.predictionCount(), nullPredictions: this.nullPredictions(),
+      localOnly: true }, null, 2);
     const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
     const link = document.createElement('a'); link.href = url; link.download = 'survey-gaze-test.json'; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
@@ -156,7 +207,7 @@ export class EyeTrackingService {
     if (w.webgazer) return Promise.resolve(w.webgazer);
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = 'https://webgazer.cs.brown.edu/webgazer.js';
+      script.src = this.libraryUrl;
       script.onload = () => w.webgazer ? resolve(w.webgazer) : reject(new Error('WebGazer missing'));
       script.onerror = () => reject(new Error('Could not load WebGazer'));
       document.head.appendChild(script);
