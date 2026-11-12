@@ -45,6 +45,9 @@ export class EyeTrackingService {
     [15, 85], [50, 85], [85, 85]
   ] as const;
   get recording(): boolean { return !!this.active; }
+  get activeQuestionCode(): string { return this.active?.questionCode ?? ''; }
+  get activeTrialIndex(): number { return this.active?.trialIndex ?? -1; }
+  get activeQuestionSamples(): number { return this.active ? this.samples().length - this.active.samplesAtStart : 0; }
   get hasGazeData(): boolean { return this.samples().length > 0; }
 
   async enable(): Promise<void> {
@@ -96,7 +99,6 @@ export class EyeTrackingService {
           return;
         }
         if (document.hidden) return;
-        if (!Number.isFinite(p.x) || !Number.isFinite(p.y)) return;
         const now = performance.now();
         if (now - this.last < 100 || this.samples().length >= 30000) return;
         this.last = now;
@@ -138,6 +140,7 @@ export class EyeTrackingService {
     if (!this.enabled() || !this.calibrated()) return;
     this.active = { questionCode, phase, trialIndex, start: performance.now(), samplesAtStart: this.samples().length };
     this.engine?.resume();
+    this.status.set('Grabando mirada en ' + questionCode);
   }
   answer(score: number): void {
     if (!this.active) return;
@@ -155,6 +158,7 @@ export class EyeTrackingService {
     this.active = undefined;
     this.predictionVisible.set(false);
     this.engine?.pause();
+    if (this.enabled() && this.calibrated()) this.status.set('En pausa entre preguntas');
   }
   async stop(): Promise<void> {
     this.pause();
