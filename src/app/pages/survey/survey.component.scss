@@ -337,3 +337,43 @@
   background: #39304c;
   cursor: pointer;
 }
+
+/* Live viewport-coordinate WebGazer estimate, rendered above the survey and
+   never intercepting user clicks. Yellow dot = estimated gaze, not mouse. */
+.live-gaze-point {
+  position: fixed;
+  width: 23px;
+  height: 23px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: rgba(255, 214, 64, .54);
+  border: 3px solid #ffe380;
+  box-shadow: 0 0 0 5px rgba(255, 207, 42, .18), 0 0 26px rgba(255, 217, 60, .65);
+  z-index: 9999;
+  pointer-events: none;
+  transition: left .07s linear, top .07s linear;
+}
+.survey-camera-preview details {
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+.survey-camera-preview pre {
+  white-space: pre-wrap;
+  max-height: 150px;
+  overflow: auto;
+  font-size: 11px;
+  color: #f3b0b0;
+}
+.eye-opt-in button {
+  display: inline-block;
+  padding: 8px 12px;
+  margin-right: 8px;
+  margin-bottom: 6px;
+  border: 1px solid #ffd175;
+  border-radius: 8px;
+  background: #271840;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+.eye-opt-in button:disabled { opacity: .4; cursor: not-allowed; }
