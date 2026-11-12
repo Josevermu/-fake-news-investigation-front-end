@@ -6,6 +6,7 @@
     <video #cameraPreview class="eye-video-preview" autoplay muted playsinline aria-label="Vista previa de webcam en tiempo real"></video>
     <p>La cámara y los puntos de seguimiento aparecerán aquí al activarla.</p>
     <p>Estado: {{ eye.status() }} · {{ eye.samples().length }} muestras · {{ eye.predictionCount() }} predicciones · {{ eye.nullPredictions() }} lecturas nulas</p>
+    <p *ngIf="eye.recording">Registrando {{ eye.activeQuestionCode }} · intento {{ eye.activeTrialIndex + 1 }} · {{ eye.activeQuestionSamples }} muestras de esta pregunta</p>
     <p *ngIf="eye.lastPoint() as point">Mirada: X {{ point.x | number:'1.0-0' }}, Y {{ point.y | number:'1.0-0' }}</p>
     <p *ngIf="eye.error()" role="alert">{{ eye.error() }}</p>
     <details *ngIf="eye.lastErrorStack()"><summary>Detalles técnicos del error</summary><pre>{{ eye.lastErrorStack() }}</pre></details>
