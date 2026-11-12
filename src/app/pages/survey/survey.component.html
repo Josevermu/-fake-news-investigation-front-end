@@ -1,17 +1,20 @@
 <section class="screen" [class.eye-demo-screen]="surveyService.isEyeTrackingDemo()">
+  <div class="live-gaze-point" *ngIf="eye.enabled() && eye.calibrated() && eye.predictionVisible() && eye.recording && eye.lastPoint() as point"
+    [style.left.px]="point.x" [style.top.px]="point.y" aria-hidden="true"></div>
   <aside class="survey-camera-preview" *ngIf="surveyService.isEyeTrackingDemo() || eye.enabled()">
     <strong>Vista de cámara · WebGazer</strong>
     <video #cameraPreview class="eye-video-preview" autoplay muted playsinline aria-label="Vista previa de webcam en tiempo real"></video>
     <p>La cámara y los puntos de seguimiento aparecerán aquí al activarla.</p>
-    <p>Estado: {{ eye.status() }} · {{ eye.samples().length }} muestras · {{ eye.predictionCount() }} predicciones</p>
+    <p>Estado: {{ eye.status() }} · {{ eye.samples().length }} muestras · {{ eye.predictionCount() }} predicciones · {{ eye.nullPredictions() }} lecturas nulas</p>
     <p *ngIf="eye.lastPoint() as point">Mirada: X {{ point.x | number:'1.0-0' }}, Y {{ point.y | number:'1.0-0' }}</p>
     <p *ngIf="eye.error()" role="alert">{{ eye.error() }}</p>
+    <details *ngIf="eye.lastErrorStack()"><summary>Detalles técnicos del error</summary><pre>{{ eye.lastErrorStack() }}</pre></details>
   </aside>
   <app-glass-card>
     <aside class="eye-opt-in">
       <p>Opcional: seguimiento ocular con cámara. Los datos permanecen en el navegador y no se envían al servidor.</p>
       <button type="button" *ngIf="!eye.enabled()" (click)="enableEyeTracking()">Activar seguimiento ocular</button>
-      <button type="button" *ngIf="eye.enabled()" (click)="eye.exportJson()">Exportar miradas JSON</button>
+      <button type="button" *ngIf="eye.enabled()" [disabled]="!eye.hasGazeData" (click)="eye.exportJson()">Exportar miradas JSON</button>
       <button type="button" *ngIf="eye.enabled()" (click)="eye.stop()">Detener cámara</button>
       <small>{{ eye.status() }} · {{ eye.samples().length }} muestras</small>
     </aside>
